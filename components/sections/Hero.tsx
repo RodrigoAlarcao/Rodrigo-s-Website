@@ -75,9 +75,9 @@ export default function Hero() {
   return (
     <section
       ref={containerRef}
-      className="min-h-screen flex flex-col justify-between pt-32 md:pt-40 pb-16 md:pb-24"
+      className="min-h-screen flex flex-col pt-32 md:pt-40 pb-16 md:pb-24"
     >
-      <div className="container-site flex flex-col justify-between h-full">
+      <div className="container-site flex flex-col flex-1">
 
         {/* Nome — sempre duas linhas, oversized, editorial */}
         <h1
@@ -90,7 +90,7 @@ export default function Hero() {
         </h1>
 
         {/* Separador em accent + rodapé do hero */}
-        <div className="mt-10 md:mt-14">
+        <div className="mt-auto">
           {/* 1px accent divider — PRD secção 2.4 */}
           <div
             ref={dividerRef}
