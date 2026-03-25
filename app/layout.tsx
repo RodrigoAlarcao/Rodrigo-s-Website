@@ -5,6 +5,7 @@ import "@fontsource/dm-sans/300.css";
 import "@fontsource/dm-sans/400.css";
 import "@fontsource/ibm-plex-mono/400.css";
 import "./globals.css";
+import SmoothScroll from "@/components/SmoothScroll";
 
 // ─── Cabinet Grotesk — Fontshare (local) ────────────────────────────
 const cabinetGrotesk = localFont({
@@ -69,7 +70,9 @@ export default function RootLayout({
   return (
     // dark class: dark mode exclusivo (PRD secção 2.1)
     <html lang="pt" className={`dark ${cabinetGrotesk.variable}`}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <SmoothScroll>{children}</SmoothScroll>
+      </body>
     </html>
   );
 }
