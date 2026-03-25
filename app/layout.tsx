@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 // DM Sans e IBM Plex Mono via @fontsource — ficheiros locais, sem fetch externo
 import "@fontsource/dm-sans/300.css";
 import "@fontsource/dm-sans/400.css";
@@ -6,13 +7,18 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "./globals.css";
 
 // ─── Cabinet Grotesk — Fontshare (local) ────────────────────────────
-// ⚠ Necessita dos ficheiros em public/fonts/cabinet-grotesk/
-// Ver instruções em: public/fonts/cabinet-grotesk/README.md
-// Enquanto não existirem, o site usa o fallback system-ui
-
-// TODO: quando Cabinet Grotesk estiver em public/fonts/cabinet-grotesk/
-// adicionar aqui o next/font/local e passar a variável para o <html>
-// Ver instruções em: public/fonts/cabinet-grotesk/README.md
+const cabinetGrotesk = localFont({
+  src: [
+    { path: "../public/fonts/cabinet-grotesk/CabinetGrotesk-Regular.woff2",    weight: "400", style: "normal" },
+    { path: "../public/fonts/cabinet-grotesk/CabinetGrotesk-Medium.woff2",     weight: "500", style: "normal" },
+    { path: "../public/fonts/cabinet-grotesk/CabinetGrotesk-Bold.woff2",       weight: "700", style: "normal" },
+    { path: "../public/fonts/cabinet-grotesk/CabinetGrotesk-Extrabold.woff2",  weight: "800", style: "normal" },
+    { path: "../public/fonts/cabinet-grotesk/CabinetGrotesk-Black.woff2",      weight: "900", style: "normal" },
+  ],
+  variable: "--font-display",
+  display: "swap",
+  fallback: ["system-ui", "sans-serif"],
+});
 
 // ─── SEO Metadata ────────────────────────────────────────────────────
 export const metadata: Metadata = {
@@ -62,7 +68,7 @@ export default function RootLayout({
 }>) {
   return (
     // dark class: dark mode exclusivo (PRD secção 2.1)
-    <html lang="pt" className="dark">
+    <html lang="pt" className={`dark ${cabinetGrotesk.variable}`}>
       <body className="antialiased">{children}</body>
     </html>
   );
