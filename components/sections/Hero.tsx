@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
+import Image from "next/image";
 import gsap from "gsap";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
 
@@ -102,10 +103,13 @@ export default function Hero() {
         style={{ clipPath: "inset(0 0 0% 0)" }}
       >
         <div ref={imageInnerRef} className="w-full h-full scale-110">
-          {/* Placeholder — trocar por: <Image src="/images/rodrigo.jpg" alt="Rodrigo Alarcão" fill className="object-cover object-top" /> */}
-          <div className="w-full h-full bg-surface border-l border-border flex items-center justify-center">
-            <p className="font-mono text-label text-dim rotate-90 whitespace-nowrap">Foto em breve</p>
-          </div>
+          <Image
+            src="/images/rodrigo.jpg"
+            alt="Rodrigo Alarcão"
+            fill
+            className="object-cover object-top"
+            priority
+          />
         </div>
       </div>
 
