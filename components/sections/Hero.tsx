@@ -77,7 +77,7 @@ export default function Hero() {
       ref={containerRef}
       className="min-h-screen flex flex-col pt-32 md:pt-40 pb-16 md:pb-24"
     >
-      <div className="container-site flex flex-col flex-1">
+      <div className="container-site w-full flex flex-col flex-1">
 
         {/* Nome — sempre duas linhas, oversized, editorial */}
         <h1
