@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
@@ -10,11 +10,17 @@ gsap.registerPlugin(ScrollTrigger);
 const projects = [
   {
     number: "01",
-    name: "ecoREPORT",
+    name: "EcoReport",
     description: "Ferramenta de relatórios de sustentabilidade para empresas — da recolha de dados ao relatório final, sem fricção.",
     tags: ["Product Design", "AI Engineering"],
     url: "https://ecoreport.pt",
     urlLabel: "ecoreport.pt",
+    detail: {
+      whatIDid: "Ferramenta de relatórios de sustentabilidade que transforma dados complexos em relatórios estruturados para empresas. Input guiado, geração automática, exportação pronta a publicar.",
+      whyIDid: "As empresas têm obrigação crescente de reportar sustentabilidade — mas os processos existentes são caros, lentos e exigem consultoras. Vi uma oportunidade de tornar isso acessível.",
+      process: "Começou com um problema real de um cliente. UX no Figma primeiro — fluxos, estrutura de informação. Implementação com Claude Code + Next.js. MVP em menos de uma semana.",
+      tools: ["Claude Code", "Next.js", "Figma"],
+    },
   },
   {
     number: "02",
@@ -23,6 +29,12 @@ const projects = [
     tags: ["Product Design", "Vibe Coding"],
     url: "https://palcodemocratico.pt",
     urlLabel: "palcodemocratico.pt",
+    detail: {
+      whatIDid: "Plataforma cívica que aproxima cidadãos da política local — propostas, votação, debate estruturado entre eleitores e decisores.",
+      whyIDid: "A distância entre cidadãos e decisores é um problema de design, não de falta de interesse. Se a participação fosse tão simples como usar uma app, mais pessoas participariam.",
+      process: "Product design first — mapeei os fluxos de participação antes de escrever uma linha de código. Arquitetura no Figma, desenvolvimento com Claude Code + Cursor + Next.js.",
+      tools: ["Claude Code", "Cursor", "Next.js", "Figma"],
+    },
   },
   {
     number: "03",
@@ -31,14 +43,28 @@ const projects = [
     tags: ["Product Design", "AI Engineering", "Vibe Coding"],
     url: "https://lona-kt9z38xp0-rodrigos-projects-578d09b9.vercel.app",
     urlLabel: "lona.vercel.app",
+    detail: {
+      whatIDid: "Plataforma que liga marcas a artistas para criar obras permanentes em espaços físicos — arte como ferramenta de marketing com impacto real e duradouro.",
+      whyIDid: "O marketing tradicional não deixa marca. Uma obra de arte permanente no espaço de uma empresa gera conversas, cobertura mediática e identidade genuína. Quis construir a infra para isso acontecer.",
+      process: "O mais complexo dos três — dois produtos (LONA Street + LONA Install), roster de artistas, processo de matching marca-artista. Design system no Figma, desenvolvimento com Claude Code + Cursor + Next.js.",
+      tools: ["Claude Code", "Cursor", "Next.js", "Figma"],
+    },
   },
 ];
 
 export default function Projects() {
   const sectionRef = useRef<HTMLElement>(null);
   const rowsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const detailRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const iconRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   useIsomorphicLayoutEffect(() => {
+    // Colapsar todos os painéis de detalhe no início
+    detailRefs.current.forEach((el) => {
+      if (el) gsap.set(el, { height: 0, opacity: 0, overflow: "hidden" });
+    });
+
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
@@ -57,6 +83,28 @@ export default function Projects() {
 
     return () => ctx.revert();
   }, []);
+
+  const toggleProject = (i: number) => {
+    const isOpen = openIndex === i;
+
+    // Fechar painel aberto anteriormente
+    if (openIndex !== null) {
+      const prevEl = detailRefs.current[openIndex];
+      const prevIcon = iconRefs.current[openIndex];
+      if (prevEl) gsap.to(prevEl, { height: 0, opacity: 0, duration: 0.35, ease: "power2.in", overwrite: true });
+      if (prevIcon) gsap.to(prevIcon, { rotate: 0, duration: 0.3, ease: "power2.out" });
+    }
+
+    if (!isOpen) {
+      // Abrir novo painel
+      const el = detailRefs.current[i];
+      const icon = iconRefs.current[i];
+      if (el) gsap.to(el, { height: "auto", opacity: 1, duration: 0.5, ease: "power3.out", overwrite: true });
+      if (icon) gsap.to(icon, { rotate: 45, duration: 0.3, ease: "power2.out" });
+    }
+
+    setOpenIndex(isOpen ? null : i);
+  };
 
   return (
     <section ref={sectionRef} id="projetos">
@@ -78,11 +126,10 @@ export default function Projects() {
               ref={(el) => { rowsRef.current[i] = el; }}
               className="border-t border-border last:border-b"
             >
-              <a
-                href={project.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-16 py-10 md:py-12"
+              {/* Linha clicável — abre/fecha accordion */}
+              <button
+                onClick={() => toggleProject(i)}
+                className="w-full text-left group flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-16 py-10 md:py-12"
               >
                 {/* Esquerda — número + nome + descrição + tags */}
                 <div className="flex flex-col gap-3">
@@ -104,14 +151,77 @@ export default function Projects() {
                   </div>
                 </div>
 
-                {/* Direita — link */}
-                <div className="flex items-center gap-2 md:mt-[0.6rem] shrink-0 font-mono text-label text-dim group-hover:text-accent transition-colors duration-300 whitespace-nowrap">
-                  <span>{project.urlLabel}</span>
-                  <span className="inline-block transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1">
-                    ↗
+                {/* Direita — link externo + ícone toggle */}
+                <div className="flex items-center gap-6 md:mt-[0.6rem] shrink-0">
+                  <a
+                    href={project.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="font-mono text-label text-dim hover:text-accent transition-colors duration-300 whitespace-nowrap flex items-center gap-1"
+                  >
+                    <span>{project.urlLabel}</span>
+                    <span className="inline-block transition-transform duration-300 hover:translate-x-0.5 hover:-translate-y-0.5">↗</span>
+                  </a>
+                  <span
+                    ref={(el) => { iconRefs.current[i] = el; }}
+                    className="font-mono text-[1.25rem] text-dim group-hover:text-accent transition-colors duration-300 leading-none select-none"
+                    style={{ display: "inline-block" }}
+                  >
+                    +
                   </span>
                 </div>
-              </a>
+              </button>
+
+              {/* Painel de detalhe — controlado por GSAP */}
+              <div ref={(el) => { detailRefs.current[i] = el; }}>
+                <div className="pb-12 flex flex-col gap-10">
+
+                  {/* Screenshot placeholder */}
+                  <div className="w-full aspect-video bg-surface border border-border rounded-sm flex items-center justify-center">
+                    <span className="font-mono text-label text-dim">Screenshot em breve</span>
+                  </div>
+
+                  {/* 3 colunas de detalhe */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
+                    <div className="flex flex-col gap-3">
+                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">
+                        O que fiz
+                      </h4>
+                      <p className="font-body font-light text-text leading-[1.75]">
+                        {project.detail.whatIDid}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">
+                        Porque fiz
+                      </h4>
+                      <p className="font-body font-light text-text leading-[1.75]">
+                        {project.detail.whyIDid}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">
+                        Processo
+                      </h4>
+                      <p className="font-body font-light text-text leading-[1.75]">
+                        {project.detail.process}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {project.detail.tools.map((tool) => (
+                          <span
+                            key={tool}
+                            className="font-mono text-label text-dim border border-border px-2 py-1 rounded-sm"
+                          >
+                            {tool}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
             </div>
           ))}
         </div>
