@@ -136,10 +136,13 @@ export default function Projects() {
                   <span className="font-mono text-label text-dim">
                     {project.number}
                   </span>
-                  <h3 className="font-display font-bold text-text leading-[1.05] tracking-tight text-[clamp(2rem,4vw,3.5rem)] group-hover:text-accent transition-colors duration-300">
-                    {project.name}
+                  <h3 className="font-display font-bold text-text leading-[1.05] tracking-tight text-[clamp(2rem,4vw,3.5rem)] transition-colors duration-300 group-hover:text-accent">
+                    <span className="relative inline-block transition-transform duration-300 group-hover:-translate-y-0.5">
+                      {project.name}
+                      <span className="absolute -bottom-2 left-0 h-[2px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
+                    </span>
                   </h3>
-                  <p className="font-body font-light text-dim leading-[1.6] max-w-prose">
+                  <p className="font-body font-light text-text leading-[1.6] max-w-prose">
                     {project.description}
                   </p>
                   <div className="flex flex-wrap gap-3 mt-1">

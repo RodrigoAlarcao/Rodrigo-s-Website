@@ -15,7 +15,7 @@ const items = [
   },
   {
     number: "02",
-    title: "AI como multiplicador",
+    title: "AI como alavanca",
     body: "Claude Code, Cursor, vibe coding. Não como atalho — como alavanca. A AI amplifica a intenção de design, não a substitui.",
   },
   {
