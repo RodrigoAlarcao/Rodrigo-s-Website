@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design Tokens ─────────────────────────────────────────────── */
+:root {
+  --color-bg:      #0A0A09;
+  --color-surface: #111110;
+  --color-accent:  #E8D5B0;
+  --color-text:    #EDEAE3;
+  --color-dim:     #6B6860;
+  --color-border:  rgba(255, 255, 255, 0.06);
+
+  --font-display: 'Cabinet Grotesk', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'IBM Plex Mono', monospace;
+}
+
+/* ─── Base Reset ─────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1.75;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* ─── Noise Texture Overlay ──────────────────────────────────────── */
+/* Analogue grain — profundidade subtil sem peso visual */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px 128px;
+}
+
+/* ─── Typography Scale (reference — implemented via Tailwind) ────── */
+/* Hero name:     clamp(5rem, 10vw, 9rem)     — Cabinet Grotesk 800  */
+/* Hero tagline:  clamp(1.25rem, 2.5vw, 1.75rem) — DM Sans 400       */
+/* Section h2:    clamp(2rem, 4vw, 3.5rem)    — Cabinet Grotesk 700  */
+/* Project title: 1.25rem                     — Cabinet Grotesk 500  */
+/* Body:          1rem                        — DM Sans 300, lh 1.75 */
+/* Labels/mono:   0.6875rem                   — IBM Plex Mono, UC, tracking 0.12em */
+
+/* ─── Selection ──────────────────────────────────────────────────── */
+::selection {
+  background-color: var(--color-accent);
+  color: var(--color-bg);
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-dim);
+}
+
+/* ─── Focus ──────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 1px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ─── Reduced Motion ─────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ─── Utilities ──────────────────────────────────────────────────── */
+/* Section separator — usar div com esta classe em vez de <hr> */
+.section-divider {
+  border-top: 1px solid var(--color-accent);
+  width: 100%;
+}
+
+/* Container padrão — max-w 1200px, padding horizontal consistente */
+.container-site {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container-site {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
