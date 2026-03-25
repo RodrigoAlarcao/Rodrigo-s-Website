@@ -99,14 +99,14 @@ export default function Hero() {
 
           {/* Tagline + CTA — editorial: texto à esquerda, CTA à direita */}
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 md:gap-16">
-            <p
-              ref={taglineRef}
-              className="text-hero-tagline font-body font-light text-text max-w-[560px] leading-[1.4]"
-            >
-              Projeto, estruturo e construo produtos digitais —
-              <br className="hidden sm:block" />
-              da ideia ao MVP, em semanas.
-            </p>
+            <div ref={taglineRef} className="flex flex-col gap-1">
+              <p className="text-hero-tagline font-body font-light text-text leading-[1.4]">
+                Projeto, estruturo e construo produtos digitais.
+              </p>
+              <p className="text-hero-tagline font-body font-light italic text-dim leading-[1.4]">
+                De ideia ao MVP em semanas.
+              </p>
+            </div>
 
             {/* CTA — confiante, sem implorar atenção */}
             <a
