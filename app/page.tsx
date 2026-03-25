@@ -1,11 +1,12 @@
 import Nav from "@/components/ui/Nav";
 import Hero from "@/components/sections/Hero";
+import WhatIDo from "@/components/sections/WhatIDo";
 
 // rodrigoalarcao.pt — Página principal
 // Secções a construir:
 // ✓ Nav
 // ✓ Hero
-// — O que faço
+// ✓ O que faço
 // — Projetos
 // — Metodologia
 // — Contacto
@@ -16,6 +17,7 @@ export default function Home() {
     <main>
       <Nav />
       <Hero />
+      <WhatIDo />
     </main>
   );
 }
