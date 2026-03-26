@@ -81,15 +81,21 @@ export default function WhatIDo() {
               ref={(el) => {
                 itemsRef.current[i] = el;
               }}
-              className="py-10 md:py-0 md:px-10 first:md:pl-0 last:md:pr-0 flex flex-col gap-6"
+              className="group py-10 md:py-0 md:px-10 first:md:pl-0 last:md:pr-0 flex flex-col gap-6"
             >
               <span className="font-mono text-label text-dim">
                 {item.number}
               </span>
-              <h3 className="font-display font-bold text-text text-[2rem] leading-[1.1] tracking-tight">
-                {item.title}
-              </h3>
-              <p className="font-body font-light text-dim leading-[1.75]">
+              {/* Dual-layer title — white fades up, accent rises from below */}
+              <div className="relative">
+                <h3 className="font-display font-bold text-text text-[2rem] leading-[1.1] tracking-tight transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:opacity-0 group-hover:-translate-y-2">
+                  {item.title}
+                </h3>
+                <h3 className="absolute inset-0 font-display font-bold text-accent text-[2rem] leading-[1.1] tracking-tight transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0" aria-hidden="true">
+                  {item.title}
+                </h3>
+              </div>
+              <p className="font-body font-light text-dim leading-[1.75] transition-colors duration-500 group-hover:text-text">
                 {item.body}
               </p>
             </div>

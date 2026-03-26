@@ -61,7 +61,6 @@ export default function Projects() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   useIsomorphicLayoutEffect(() => {
-    // Colapsar todos os painéis de detalhe no início
     detailRefs.current.forEach((el) => {
       if (el) gsap.set(el, { height: 0, opacity: 0, overflow: "hidden" });
     });
@@ -74,10 +73,7 @@ export default function Projects() {
         transformOrigin: "left",
         duration: 0.9,
         ease: "power3.out",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top 80%",
-        },
+        scrollTrigger: { trigger: sectionRef.current, start: "top 80%" },
       });
 
       gsap.from(rowsRef.current.filter(Boolean), {
@@ -86,10 +82,7 @@ export default function Projects() {
         duration: 0.8,
         ease: "power3.out",
         stagger: 0.1,
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top 75%",
-        },
+        scrollTrigger: { trigger: sectionRef.current, start: "top 75%" },
       });
     }, sectionRef);
 
@@ -99,7 +92,6 @@ export default function Projects() {
   const toggleProject = (i: number) => {
     const isOpen = openIndex === i;
 
-    // Fechar painel aberto anteriormente
     if (openIndex !== null) {
       const prevEl = detailRefs.current[openIndex];
       const prevIcon = iconRefs.current[openIndex];
@@ -108,7 +100,6 @@ export default function Projects() {
     }
 
     if (!isOpen) {
-      // Abrir novo painel
       const el = detailRefs.current[i];
       const icon = iconRefs.current[i];
       if (el) gsap.to(el, { height: "auto", opacity: 1, duration: 0.5, ease: "power3.out", overwrite: true });
@@ -138,55 +129,66 @@ export default function Projects() {
               ref={(el) => { rowsRef.current[i] = el; }}
               className="border-t border-border last:border-b"
             >
-              {/* Linha clicável — abre/fecha accordion */}
-              <button
-                onClick={() => toggleProject(i)}
-                className="w-full text-left group flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-16 py-10 md:py-12 -mx-4 px-4 md:-mx-6 md:px-6 rounded-sm hover:bg-white/[0.025] transition-colors duration-300"
-              >
-                {/* Esquerda — número + nome + descrição + tags */}
-                <div className="flex flex-col gap-3">
-                  <span className="font-mono text-label text-dim">
-                    {project.number}
-                  </span>
-                  <h3 className="font-display font-bold text-text leading-[1.05] tracking-tight text-[clamp(2rem,4vw,3.5rem)] transition-colors duration-300 group-hover:text-accent">
-                    <span className="relative inline-block transition-transform duration-300 group-hover:-translate-y-0.5">
-                      {project.name}
-                      <span className="absolute -bottom-2 left-0 h-[2px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
-                    </span>
+              {/* Conteúdo superior — número + nome + descrição + tags */}
+              <div className="group flex flex-col gap-3 pt-10 md:pt-12 pb-8">
+                <span className="font-mono text-label text-dim">
+                  {project.number}
+                </span>
+
+                {/* Dual-layer title */}
+                <div className="relative">
+                  <h3 className="font-display font-bold text-text leading-[1.05] tracking-tight text-[clamp(2rem,4vw,3.5rem)] transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:opacity-0 group-hover:-translate-y-2">
+                    {project.name}
                   </h3>
-                  <p className="font-body font-light text-text leading-[1.6] max-w-prose">
-                    {project.description}
-                  </p>
-                  <div className="flex flex-wrap gap-3 mt-1">
-                    {project.tags.map((tag) => (
-                      <span key={tag} className="font-mono text-label text-dim uppercase tracking-[0.12em]">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                  <h3 className="absolute inset-0 font-display font-bold text-accent leading-[1.05] tracking-tight text-[clamp(2rem,4vw,3.5rem)] transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0" aria-hidden="true">
+                    {project.name}
+                  </h3>
                 </div>
 
-                {/* Direita — link externo + ícone toggle */}
-                <div className="flex items-center gap-6 md:mt-[0.6rem] shrink-0">
-                  <a
-                    href={project.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="font-mono text-label text-dim hover:text-accent transition-colors duration-300 whitespace-nowrap flex items-center gap-1"
-                  >
-                    <span>{project.urlLabel}</span>
-                    <span className="inline-block transition-transform duration-300 hover:translate-x-0.5 hover:-translate-y-0.5">↗</span>
-                  </a>
+                <p className="font-body font-light text-dim leading-[1.6] max-w-prose transition-colors duration-500 group-hover:text-text">
+                  {project.description}
+                </p>
+                <div className="flex flex-wrap gap-3 mt-1">
+                  {project.tags.map((tag) => (
+                    <span key={tag} className="font-mono text-label text-dim uppercase tracking-[0.12em]">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dois CTAs grandes */}
+              <div className="flex border-t border-border mb-10">
+                {/* CTA 1 — ver projecto */}
+                <a
+                  href={project.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-between py-5 pr-8 border-r border-border group/link hover:text-accent transition-colors duration-300"
+                >
+                  <span className="font-display font-medium text-[1.25rem] text-text group-hover/link:text-accent transition-colors duration-300">
+                    Ver projecto
+                  </span>
+                  <span className="text-dim group-hover/link:text-accent group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-all duration-300 inline-block">
+                    ↗
+                  </span>
+                </a>
+                {/* CTA 2 — detalhes / fechar */}
+                <button
+                  onClick={() => toggleProject(i)}
+                  className="flex-1 flex items-center justify-between py-5 pl-8 group/btn hover:text-accent transition-colors duration-300"
+                >
+                  <span className="font-display font-medium text-[1.25rem] text-text group-hover/btn:text-accent transition-colors duration-300">
+                    {openIndex === i ? "Fechar" : "Detalhes"}
+                  </span>
                   <span
                     ref={(el) => { iconRefs.current[i] = el; }}
-                    className="font-mono text-[1.25rem] text-dim group-hover:text-accent transition-colors duration-300 leading-none select-none"
-                    style={{ display: "inline-block" }}
+                    className="font-mono text-[1.25rem] text-dim group-hover/btn:text-accent transition-colors duration-300 leading-none select-none inline-block"
                   >
                     +
                   </span>
-                </div>
-              </button>
+                </button>
+              </div>
 
               {/* Painel de detalhe — controlado por GSAP */}
               <div ref={(el) => { detailRefs.current[i] = el; }}>
@@ -200,40 +202,40 @@ export default function Projects() {
                   {/* 3 colunas de detalhe */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
                     <div className="flex flex-col gap-3">
-                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">
-                        O que fiz
-                      </h4>
-                      <p className="font-body font-light text-text leading-[1.75]">
-                        {project.detail.whatIDid}
-                      </p>
+                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">O que fiz</h4>
+                      <p className="font-body font-light text-text leading-[1.75]">{project.detail.whatIDid}</p>
                     </div>
                     <div className="flex flex-col gap-3">
-                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">
-                        Porque fiz
-                      </h4>
-                      <p className="font-body font-light text-text leading-[1.75]">
-                        {project.detail.whyIDid}
-                      </p>
+                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">Porque fiz</h4>
+                      <p className="font-body font-light text-text leading-[1.75]">{project.detail.whyIDid}</p>
                     </div>
                     <div className="flex flex-col gap-3">
-                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">
-                        Processo
-                      </h4>
-                      <p className="font-body font-light text-text leading-[1.75]">
-                        {project.detail.process}
-                      </p>
+                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">Processo</h4>
+                      <p className="font-body font-light text-text leading-[1.75]">{project.detail.process}</p>
                       <div className="flex flex-wrap gap-2 mt-2">
                         {project.detail.tools.map((tool) => (
-                          <span
-                            key={tool}
-                            className="font-mono text-label text-dim border border-border px-2 py-1 rounded-sm"
-                          >
+                          <span key={tool} className="font-mono text-label text-dim border border-border px-2 py-1 rounded-sm">
                             {tool}
                           </span>
                         ))}
                       </div>
                     </div>
                   </div>
+
+                  {/* CTA dentro da gaveta */}
+                  <a
+                    href={project.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="self-start flex items-center gap-6 justify-between border border-border px-8 py-5 min-w-[260px] hover:border-accent hover:bg-white/[0.03] transition-all duration-300 group/cta"
+                  >
+                    <span className="font-display font-medium text-[1.125rem] text-text group-hover/cta:text-accent transition-colors duration-300">
+                      Ver projecto
+                    </span>
+                    <span className="text-dim group-hover/cta:text-accent group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5 transition-all duration-300 inline-block">
+                      ↗
+                    </span>
+                  </a>
 
                 </div>
               </div>
