@@ -57,6 +57,7 @@ export default function Projects() {
   const rowsRef = useRef<(HTMLDivElement | null)[]>([]);
   const detailRefs = useRef<(HTMLDivElement | null)[]>([]);
   const iconRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const dividerRef = useRef<HTMLDivElement>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   useIsomorphicLayoutEffect(() => {
@@ -68,6 +69,17 @@ export default function Projects() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
+      gsap.from(dividerRef.current, {
+        scaleX: 0,
+        transformOrigin: "left",
+        duration: 0.9,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%",
+        },
+      });
+
       gsap.from(rowsRef.current.filter(Boolean), {
         y: 40,
         opacity: 0,
@@ -115,7 +127,7 @@ export default function Projects() {
           <p className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
             Projetos
           </p>
-          <div className="flex-1 border-t border-border" />
+          <div ref={dividerRef} className="flex-1 border-t border-border" />
         </div>
 
         {/* Lista de projectos */}
@@ -129,7 +141,7 @@ export default function Projects() {
               {/* Linha clicável — abre/fecha accordion */}
               <button
                 onClick={() => toggleProject(i)}
-                className="w-full text-left group flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-16 py-10 md:py-12"
+                className="w-full text-left group flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-16 py-10 md:py-12 -mx-4 px-4 md:-mx-6 md:px-6 rounded-sm hover:bg-white/[0.025] transition-colors duration-300"
               >
                 {/* Esquerda — número + nome + descrição + tags */}
                 <div className="flex flex-col gap-3">

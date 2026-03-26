@@ -4,64 +4,85 @@ import { useRef, useEffect } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
+import { useMagnetic } from "@/hooks/useMagnetic";
 
 export default function Hero() {
   const containerRef = useRef<HTMLElement>(null);
-  const nameRef = useRef<HTMLHeadingElement>(null);
+  const line1Ref = useRef<HTMLSpanElement>(null);
+  const line2Ref = useRef<HTMLSpanElement>(null);
   const dividerRef = useRef<HTMLDivElement>(null);
   const taglineRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLAnchorElement>(null);
   const imageWrapRef = useRef<HTMLDivElement>(null);
   const imageInnerRef = useRef<HTMLDivElement>(null);
 
-  // Animações de entrada
+  // Entrance animations
   useIsomorphicLayoutEffect(() => {
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const ctx = gsap.context(() => {
       if (prefersReduced) {
-        gsap.set([nameRef.current, dividerRef.current, taglineRef.current, ctaRef.current, imageWrapRef.current], {
-          clearProps: "all",
-        });
+        gsap.set(
+          [line1Ref.current, line2Ref.current, dividerRef.current, taglineRef.current, ctaRef.current, imageWrapRef.current],
+          { clearProps: "all" }
+        );
         return;
       }
 
-      const tl = gsap.timeline({ delay: 0.2 });
+      const tl = gsap.timeline({ delay: 0.15 });
 
-      tl.from(nameRef.current, {
-        clipPath: "inset(0 100% 0 0)",
-        duration: 1.0,
-        ease: "power3.inOut",
+      // Mask reveal — each line slides up from behind overflow-hidden parent
+      tl.from([line1Ref.current, line2Ref.current], {
+        y: "110%",
+        duration: 1.1,
+        ease: "power3.out",
+        stagger: 0.1,
       })
-        .from(imageWrapRef.current, {
-          clipPath: "inset(0 0 100% 0)",
-          duration: 1.1,
-          ease: "power3.inOut",
-        }, 0)
-        .from(dividerRef.current, {
-          scaleX: 0,
-          transformOrigin: "left",
-          duration: 0.6,
-          ease: "power2.inOut",
-        }, "-=0.2")
-        .from(taglineRef.current, {
-          y: 40,
-          opacity: 0,
-          duration: 0.8,
-          ease: "power3.out",
-        }, "-=0.3")
-        .from(ctaRef.current, {
-          y: 20,
-          opacity: 0,
-          duration: 0.6,
-          ease: "power2.out",
-        }, "-=0.5");
+        .from(
+          imageWrapRef.current,
+          {
+            clipPath: "inset(0 0 100% 0)",
+            duration: 1.2,
+            ease: "power3.inOut",
+          },
+          0.1
+        )
+        .from(
+          dividerRef.current,
+          {
+            scaleX: 0,
+            transformOrigin: "left",
+            duration: 0.7,
+            ease: "power2.inOut",
+          },
+          "-=0.5"
+        )
+        .from(
+          taglineRef.current,
+          {
+            y: 30,
+            opacity: 0,
+            duration: 0.8,
+            ease: "power3.out",
+          },
+          "-=0.4"
+        )
+        .from(
+          ctaRef.current,
+          {
+            y: 20,
+            opacity: 0,
+            duration: 0.6,
+            ease: "power2.out",
+          },
+          "-=0.5"
+        );
     }, containerRef);
 
     return () => ctx.revert();
   }, []);
 
-  // Parallax de rato na imagem
+  // Cursor parallax on hero image
   useEffect(() => {
     const section = containerRef.current;
     const inner = imageInnerRef.current;
@@ -91,12 +112,15 @@ export default function Hero() {
     };
   }, []);
 
+  // Magnetic CTA
+  useMagnetic(ctaRef, 0.3);
+
   return (
     <section
       ref={containerRef}
       className="min-h-screen flex flex-col pt-32 md:pt-40 pb-16 md:pb-24 relative overflow-hidden"
     >
-      {/* Imagem — direita, parallax com cursor — substituir div por <Image> quando tiveres a foto */}
+      {/* Photo — right side, cursor parallax */}
       <div
         ref={imageWrapRef}
         className="hidden md:block absolute right-0 top-0 h-full w-[42%] overflow-hidden"
@@ -115,17 +139,17 @@ export default function Hero() {
 
       <div className="container-site w-full flex flex-col flex-1">
 
-        {/* Nome — sempre duas linhas, oversized, editorial */}
-        <h1
-          ref={nameRef}
-          className="font-display font-extrabold text-hero-name text-text leading-[0.92] tracking-tight md:max-w-[55%]"
-        >
-          Rodrigo
-          <br />
-          Alarcão
+        {/* Name — mask reveal, each line in overflow-hidden container */}
+        <h1 className="font-display font-extrabold text-hero-name text-text leading-[0.92] tracking-tight md:max-w-[55%]">
+          <span className="block overflow-hidden">
+            <span ref={line1Ref} className="block">Rodrigo</span>
+          </span>
+          <span className="block overflow-hidden">
+            <span ref={line2Ref} className="block">Alarcão</span>
+          </span>
         </h1>
 
-        {/* Separador em accent + rodapé do hero */}
+        {/* Divider + bottom block */}
         <div className="mt-auto">
           <div
             ref={dividerRef}

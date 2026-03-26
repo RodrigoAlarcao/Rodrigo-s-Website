@@ -28,11 +28,23 @@ const items = [
 export default function WhatIDo() {
   const sectionRef = useRef<HTMLElement>(null);
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const dividerRef = useRef<HTMLDivElement>(null);
 
   useIsomorphicLayoutEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
+      gsap.from(dividerRef.current, {
+        scaleX: 0,
+        transformOrigin: "left",
+        duration: 0.9,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%",
+        },
+      });
+
       gsap.from(itemsRef.current.filter(Boolean), {
         y: 60,
         opacity: 0,
@@ -58,7 +70,7 @@ export default function WhatIDo() {
           <p className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
             O que faço
           </p>
-          <div className="flex-1 border-t border-border" />
+          <div ref={dividerRef} className="flex-1 border-t border-border" />
         </div>
 
         {/* Três blocos — grid com separadores verticais */}

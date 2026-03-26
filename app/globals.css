@@ -124,3 +124,11 @@ body::before {
     padding-right: 2.5rem;
   }
 }
+
+/* ─── Custom Cursor ──────────────────────────────────────────────── */
+/* Hide default cursor on fine-pointer devices (desktop/laptop) */
+@media (pointer: fine) {
+  html, html * {
+    cursor: none !important;
+  }
+}

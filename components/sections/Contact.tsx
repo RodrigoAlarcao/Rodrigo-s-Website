@@ -14,6 +14,7 @@ gsap.registerPlugin(ScrollTrigger);
 export default function Contact() {
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const dividerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -30,6 +31,17 @@ export default function Contact() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
+      gsap.from(dividerRef.current, {
+        scaleX: 0,
+        transformOrigin: "left",
+        duration: 0.9,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%",
+        },
+      });
+
       const els = contentRef.current?.querySelectorAll("[data-animate]");
       if (els) {
         gsap.from(Array.from(els), {
@@ -79,7 +91,7 @@ export default function Contact() {
           <p className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
             Contacto
           </p>
-          <div className="flex-1 border-t border-border" />
+          <div ref={dividerRef} className="flex-1 border-t border-border" />
         </div>
 
         <div ref={contentRef} className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
