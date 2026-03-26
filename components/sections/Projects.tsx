@@ -135,15 +135,13 @@ export default function Projects() {
                   {project.number}
                 </span>
 
-                {/* Dual-layer title */}
-                <div className="relative">
-                  <h3 className="font-display font-bold text-text leading-[1.05] tracking-tight text-[clamp(2rem,4vw,3.5rem)] transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:opacity-0 group-hover:-translate-y-2">
+                {/* Title with expanding underline */}
+                <h3 className="font-display font-bold text-text leading-[1.05] tracking-tight text-[clamp(2rem,4vw,3.5rem)] transition-colors duration-300 group-hover:text-accent">
+                  <span className="relative inline-block transition-transform duration-300 group-hover:-translate-y-0.5">
                     {project.name}
-                  </h3>
-                  <h3 className="absolute inset-0 font-display font-bold text-accent leading-[1.05] tracking-tight text-[clamp(2rem,4vw,3.5rem)] transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0" aria-hidden="true">
-                    {project.name}
-                  </h3>
-                </div>
+                    <span className="absolute -bottom-2 left-0 h-[2px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
+                  </span>
+                </h3>
 
                 <p className="font-body font-light text-dim leading-[1.6] max-w-prose transition-colors duration-500 group-hover:text-text">
                   {project.description}

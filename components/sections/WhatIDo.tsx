@@ -86,15 +86,13 @@ export default function WhatIDo() {
               <span className="font-mono text-label text-dim">
                 {item.number}
               </span>
-              {/* Dual-layer title — white fades up, accent rises from below */}
-              <div className="relative">
-                <h3 className="font-display font-bold text-text text-[2rem] leading-[1.1] tracking-tight transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:opacity-0 group-hover:-translate-y-2">
+              {/* Title with expanding underline */}
+              <h3 className="font-display font-bold text-text text-[2rem] leading-[1.1] tracking-tight transition-colors duration-300 group-hover:text-accent">
+                <span className="relative inline-block transition-transform duration-300 group-hover:-translate-y-0.5">
                   {item.title}
-                </h3>
-                <h3 className="absolute inset-0 font-display font-bold text-accent text-[2rem] leading-[1.1] tracking-tight transition-all duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0" aria-hidden="true">
-                  {item.title}
-                </h3>
-              </div>
+                  <span className="absolute -bottom-2 left-0 h-[2px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
+                </span>
+              </h3>
               <p className="font-body font-light text-dim leading-[1.75] transition-colors duration-500 group-hover:text-text">
                 {item.body}
               </p>
