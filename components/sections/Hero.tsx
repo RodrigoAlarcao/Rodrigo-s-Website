@@ -2,7 +2,10 @@
 
 import { useRef, type MouseEvent } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Hero() {
   // ── Layer 3: text refs (unchanged) ──────────────────────────────────────────
@@ -331,6 +334,20 @@ export default function Hero() {
           },
           "-=0.5"
         );
+
+      // Divider scroll-out: encolhe para a direita conforme o hero sai de cena
+      gsap.to(dividerRef.current, {
+        scaleX: 0,
+        opacity: 0,
+        transformOrigin: "right",
+        ease: "none",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "center top",
+          end: "bottom top",
+          scrub: 0.6,
+        },
+      });
     }, containerRef);
 
     return () => ctx.revert();
@@ -365,14 +382,13 @@ export default function Hero() {
       {/* Layer 3 — text content (unchanged JSX) */}
       <div className="w-full container-site relative z-20 flex flex-col gap-16 md:gap-0 md:justify-between md:h-full md:flex-1">
 
-        {/* Nome — sempre duas linhas, oversized, editorial */}
+        {/* Nome — Rodrigo light italic / Alarcão extrabold */}
         <h1
           ref={nameRef}
-          className="font-display font-extrabold text-hero-name text-text leading-[0.92] tracking-tight"
+          className="font-display text-hero-name text-text leading-[0.92] tracking-tight"
         >
-          Rodrigo
-          <br />
-          Alarcão
+          <span className="block font-light italic">Rodrigo</span>
+          <span className="block font-extrabold">Alarcão</span>
         </h1>
 
         {/* Separador em accent + rodapé do hero */}
@@ -387,11 +403,14 @@ export default function Hero() {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 md:gap-16">
             <p
               ref={taglineRef}
-              className="text-hero-tagline font-body font-light text-text max-w-[560px] leading-[1.4]"
+              className="font-body text-text max-w-[480px] leading-[1.5] text-[1rem] md:text-[1.0625rem]"
             >
-              Projeto, estruturo e construo produtos digitais —
-              <br className="hidden sm:block" />
-              da ideia ao MVP, em semanas.
+              <span className="block font-semibold">
+                Projeto, estruturo e construo produtos digitais
+              </span>
+              <span className="block font-light italic mt-1">
+                Da ideia ao MVP, em semanas.
+              </span>
             </p>
 
             {/* CTA — confiante, sem implorar atenção */}
