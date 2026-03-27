@@ -78,15 +78,12 @@ export default function WhatIDo() {
           {items.map((item, i) => (
             <div
               key={item.title}
-              ref={(el) => {
-                itemsRef.current[i] = el;
-              }}
+              ref={(el) => { itemsRef.current[i] = el; }}
               className="group py-10 md:py-0 md:px-10 first:md:pl-0 last:md:pr-0 flex flex-col gap-6"
             >
               <span className="font-mono text-label text-dim">
                 {item.number}
               </span>
-              {/* Title with expanding underline */}
               <h3 className="font-display font-bold text-text text-[2rem] leading-[1.1] tracking-tight transition-colors duration-300 group-hover:text-accent">
                 <span className="relative inline-block transition-transform duration-300 group-hover:-translate-y-0.5">
                   {item.title}

@@ -1,72 +1,329 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-import Image from "next/image";
+import { useRef, type MouseEvent } from "react";
 import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
-import { useMagnetic } from "@/hooks/useMagnetic";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Hero() {
+  // ── Layer 3: text refs (unchanged) ──────────────────────────────────────────
   const containerRef = useRef<HTMLElement>(null);
-  const line1Ref = useRef<HTMLSpanElement>(null);
-  const line2Ref = useRef<HTMLSpanElement>(null);
+  const nameRef = useRef<HTMLHeadingElement>(null);
   const dividerRef = useRef<HTMLDivElement>(null);
-  const taglineRef = useRef<HTMLDivElement>(null);
+  const taglineRef = useRef<HTMLParagraphElement>(null);
   const ctaRef = useRef<HTMLAnchorElement>(null);
-  const imageWrapRef = useRef<HTMLDivElement>(null);
-  const imageInnerRef = useRef<HTMLDivElement>(null);
 
-  // Entrance animations
+  // ── Layer 2: canvas refs ─────────────────────────────────────────────────────
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const tgtPos = useRef({ x: -9999, y: -9999 });
+  const curPos = useRef({ x: -9999, y: -9999 });
+  const isHovering = useRef(false); // true while cursor is inside the hero
+  const fadeVal = useRef(0);        // 0–1, lerped for smooth enter/leave
+
+  // ── Canvas setup ─────────────────────────────────────────────────────────────
   useIsomorphicLayoutEffect(() => {
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    if (prefersReduced) return;
+
+    const canvas = canvasRef.current!;
+    const container = containerRef.current!;
+
+    const ro = new ResizeObserver(() => {
+      canvas.width = container.offsetWidth;
+      canvas.height = container.offsetHeight;
+    });
+    ro.observe(container);
+    canvas.width = container.offsetWidth;
+    canvas.height = container.offsetHeight;
+
+    // Preload wireframe image — drawn on canvas as the "always-visible" base layer
+    const bgFront = new Image();
+    bgFront.src = "/images/hero-bg-front.png";
+
+    // ── Marching squares iso-contour approach ────────────────────────────────
+    // Contour lines of a continuous scalar field NEVER cross each other.
+    // Height field h(x,y) = sum of Gaussian "hills". Marching squares extracts
+    // iso-lines at evenly-spaced levels → topographic map, zero crossings.
+
+    // Edge table for marching squares (bits: TL=8, TR=4, BR=2, BL=1).
+    // Each entry is a list of [edgeA, edgeB] segment(s) to draw.
+    // Edges: 0=bottom, 1=right, 2=top, 3=left
+    const MS_SEGS: Array<Array<[number, number]>> = [
+      [],              // 0  0000
+      [[3, 0]],        // 1  0001 BL
+      [[0, 1]],        // 2  0010 BR
+      [[3, 1]],        // 3  0011 BL+BR
+      [[1, 2]],        // 4  0100 TR
+      [[1, 2],[3, 0]], // 5  0101 TR+BL saddle
+      [[0, 2]],        // 6  0110 TR+BR
+      [[3, 2]],        // 7  0111 TR+BR+BL
+      [[2, 3]],        // 8  1000 TL
+      [[2, 0]],        // 9  1001 TL+BL
+      [[2, 3],[0, 1]], // 10 1010 TL+BR saddle
+      [[2, 1]],        // 11 1011 TL+BR+BL
+      [[1, 3]],        // 12 1100 TL+TR
+      [[1, 0]],        // 13 1101 TL+TR+BL
+      [[0, 3]],        // 14 1110 TL+TR+BR
+      [],              // 15 1111
+    ];
+
+    // Gaussian "mountains" — cx/cy normalised [0,1], r fraction of H, A peak height
+    // fx/fy = position oscillation frequencies (rad/s), phx/phy = phases
+    const mountains = [
+      { cx: 0.82, cy: 0.22, r: 0.40, A: 1.00, fx: 0.08, fy: 0.06, phx: 0.00, phy: 0.00 },
+      { cx: 0.08, cy: 0.50, r: 0.36, A: 0.88, fx: 0.07, fy: 0.05, phx: 1.30, phy: 0.90 },
+      { cx: 0.56, cy: 0.88, r: 0.38, A: 0.82, fx: 0.06, fy: 0.07, phx: 2.10, phy: 1.80 },
+      { cx: 0.36, cy: 0.08, r: 0.30, A: 0.72, fx: 0.09, fy: 0.06, phx: 3.20, phy: 2.50 },
+      { cx: 0.96, cy: 0.76, r: 0.32, A: 0.78, fx: 0.07, fy: 0.08, phx: 4.10, phy: 3.30 },
+      // Wide background hill — ensures outermost contours span the full canvas
+      { cx: 0.50, cy: 0.50, r: 0.78, A: 0.16, fx: 0.03, fy: 0.02, phx: 0.70, phy: 1.40 },
+    ];
+
+    // 20 iso-levels spanning from near-zero (large outer contours) to near-peak
+    const N_LEVELS = 20;
+    const LEVELS = Array.from({ length: N_LEVELS }, (_, i) => 0.05 + i * 0.058);
+
+    // Grid: ~7px cells at typical 1440px wide → smooth enough, fast enough
+    const GW = 200, GH = 112;
+    const hField = new Float32Array((GW + 1) * (GH + 1));
+
+    // Cursor depression radius (px) — negative Gaussian pulls contours inward
+    const CURSOR_R = 160;
+
+    // Interpolate pixel coordinate along a cell edge at contour level `lv`
+    const edgePt = (
+      edge: number, gx: number, gy: number,
+      tl: number, tr: number, br: number, bl: number,
+      lv: number, W: number, H: number
+    ): [number, number] => {
+      let gxf: number, gyf: number;
+      switch (edge) {
+        case 0: gxf = gx + (lv - bl) / (br - bl); gyf = gy + 1; break;
+        case 1: gxf = gx + 1; gyf = gy + 1 - (lv - br) / (tr - br); break;
+        case 2: gxf = gx + (lv - tl) / (tr - tl); gyf = gy; break;
+        default: gxf = gx; gyf = gy + 1 - (lv - bl) / (tl - bl); break;
+      }
+      return [(gxf / GW) * W, (gyf / GH) * H];
+    };
+
+    const draw = (time: number) => {
+      const W = canvas.width;
+      const H = canvas.height;
+      if (W === 0 || H === 0) return;
+
+      const ctx = canvas.getContext("2d")!;
+      ctx.clearRect(0, 0, W, H);
+
+      // Step 1: Wireframe base layer (replaces solid black)
+      // Falls back to dark fill while image is loading on first frame
+      ctx.globalCompositeOperation = "source-over";
+      if (bgFront.complete && bgFront.naturalWidth > 0) {
+        ctx.drawImage(bgFront, 0, 0, W, H);
+      } else {
+        ctx.fillStyle = "#0A0A09";
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      // Step 2: Lerp cursor position + fade value
+      curPos.current.x += (tgtPos.current.x - curPos.current.x) * 0.072;
+      curPos.current.y += (tgtPos.current.y - curPos.current.y) * 0.072;
+      // fadeVal → 1 on hover, → 0 on leave (0.055 ≈ ~0.8s fade)
+      fadeVal.current += ((isHovering.current ? 1 : 0) - fadeVal.current) * 0.055;
+
+      // Step 3: Organic blob reveal (destination-out)
+      // A closed Catmull-Rom spline filled with a soft radial gradient punches
+      // an organic, non-circular hole through the wireframe, revealing the portrait.
+      const cursorActive = fadeVal.current > 0.01;
+      if (cursorActive) {
+        const cx = curPos.current.x, cy = curPos.current.y;
+        const BLOB_R  = 300; // base radius (px)
+        const N       = 14;  // control points — more = smoother undulation
+
+        // Organic shape: two low-frequency harmonics on the radius, animated by time
+        const blobPts = Array.from({ length: N }, (_, i) => {
+          const angle = (2 * Math.PI * i) / N;
+          const r = BLOB_R * fadeVal.current * (
+            1.0
+            + 0.18 * Math.sin(i * 2.0 + time * 0.28)
+            + 0.10 * Math.sin(i * 3.3 + time * 0.17)
+          );
+          return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
+        });
+
+        // Closed Catmull-Rom → cubic bezier
+        ctx.beginPath();
+        ctx.moveTo(blobPts[0].x, blobPts[0].y);
+        for (let i = 0; i < N; i++) {
+          const p0 = blobPts[(i - 1 + N) % N];
+          const p1 = blobPts[i];
+          const p2 = blobPts[(i + 1) % N];
+          const p3 = blobPts[(i + 2) % N];
+          ctx.bezierCurveTo(
+            p1.x + (p2.x - p0.x) / 6, p1.y + (p2.y - p0.y) / 6,
+            p2.x - (p3.x - p1.x) / 6, p2.y - (p3.y - p1.y) / 6,
+            p2.x, p2.y
+          );
+        }
+        ctx.closePath();
+
+        // Radial gradient fill: solid at centre → transparent at edge (soft reveal)
+        const outerR = BLOB_R * fadeVal.current * 1.28;
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, outerR);
+        grad.addColorStop(0.0,  "rgba(0,0,0,1.0)");
+        grad.addColorStop(0.55, "rgba(0,0,0,0.95)");
+        grad.addColorStop(0.85, "rgba(0,0,0,0.45)");
+        grad.addColorStop(1.0,  "rgba(0,0,0,0.0)");
+
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+
+      ctx.globalCompositeOperation = "source-over";
+      ctx.lineWidth = 1;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      const t = time;
+      const mx = curPos.current.x, my = curPos.current.y;
+
+      // Step 4: Build height field
+      for (let gy = 0; gy <= GH; gy++) {
+        for (let gx = 0; gx <= GW; gx++) {
+          const px = (gx / GW) * W;
+          const py = (gy / GH) * H;
+          let val = 0;
+
+          for (const m of mountains) {
+            // Animate peak position with slow sinusoidal drift
+            const acx = (m.cx + 0.04 * Math.sin(t * m.fx + m.phx)) * W;
+            const acy = (m.cy + 0.03 * Math.sin(t * m.fy + m.phy)) * H;
+            const r2  = (m.r * H) ** 2;
+            const dx = px - acx, dy = py - acy;
+            val += m.A * Math.exp(-(dx * dx + dy * dy) / (2 * r2));
+          }
+
+          // Cursor depression — local minimum pulls nearby contours inward (fades with reveal)
+          if (cursorActive) {
+            const dx = px - mx, dy = py - my;
+            val -= 0.40 * fadeVal.current * Math.exp(-(dx * dx + dy * dy) / (2 * CURSOR_R * CURSOR_R));
+          }
+
+          hField[gy * (GW + 1) + gx] = val;
+        }
+      }
+
+      // Step 5: Marching squares — one beginPath per level for uniform stroke
+      for (let li = 0; li < N_LEVELS; li++) {
+        const lv = LEVELS[li];
+        // Outer contours slightly brighter; inner contours near-invisible
+        const alpha = 0.17 - li * 0.005;
+        if (alpha <= 0) continue;
+        ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+        ctx.beginPath();
+
+        for (let gy = 0; gy < GH; gy++) {
+          for (let gx = 0; gx < GW; gx++) {
+            const tl = hField[gy * (GW + 1) + gx];
+            const tr = hField[gy * (GW + 1) + gx + 1];
+            const br = hField[(gy + 1) * (GW + 1) + gx + 1];
+            const bl = hField[(gy + 1) * (GW + 1) + gx];
+
+            const mask =
+              (tl >= lv ? 8 : 0) |
+              (tr >= lv ? 4 : 0) |
+              (br >= lv ? 2 : 0) |
+              (bl >= lv ? 1 : 0);
+
+            for (const [e0, e1] of MS_SEGS[mask]) {
+              const [x0, y0] = edgePt(e0, gx, gy, tl, tr, br, bl, lv, W, H);
+              const [x1, y1] = edgePt(e1, gx, gy, tl, tr, br, bl, lv, W, H);
+              ctx.moveTo(x0, y0);
+              ctx.lineTo(x1, y1);
+            }
+          }
+        }
+        ctx.stroke();
+      }
+    };
+
+    gsap.ticker.add(draw);
+
+    return () => {
+      gsap.ticker.remove(draw);
+      ro.disconnect();
+    };
+  }, []);
+
+  // ── Mouse handlers ────────────────────────────────────────────────────────────
+  const handleMouseMove = (e: MouseEvent<HTMLElement>) => {
+    const rect = containerRef.current!.getBoundingClientRect();
+    tgtPos.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    isHovering.current = true;
+  };
+
+  const handleMouseLeave = () => {
+    isHovering.current = false;
+    // tgtPos intentionally NOT reset — curPos stays at last position while fading out
+  };
+
+  // ── GSAP entrance timeline (unchanged) ───────────────────────────────────────
+  useIsomorphicLayoutEffect(() => {
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
     const ctx = gsap.context(() => {
       if (prefersReduced) {
+        // Estado final imediato — sem animação
         gsap.set(
-          [line1Ref.current, line2Ref.current, dividerRef.current, taglineRef.current, ctaRef.current, imageWrapRef.current],
+          [
+            nameRef.current,
+            dividerRef.current,
+            taglineRef.current,
+            ctaRef.current,
+          ],
           { clearProps: "all" }
         );
         return;
       }
 
-      const tl = gsap.timeline({ delay: 0.15 });
+      // Timeline de entrada — PRD secção 5.1
+      const tl = gsap.timeline({ delay: 0.2 });
 
-      // Mask reveal — each line slides up from behind overflow-hidden parent
-      tl.from([line1Ref.current, line2Ref.current], {
-        y: "110%",
-        duration: 1.1,
-        ease: "power3.out",
-        stagger: 0.1,
+      // Nome: clipPath reveal da esquerda para a direita
+      tl.from(nameRef.current, {
+        clipPath: "inset(0 100% 0 0)",
+        duration: 1.0,
+        ease: "power3.inOut",
       })
-        .from(
-          imageWrapRef.current,
-          {
-            clipPath: "inset(0 0 100% 0)",
-            duration: 1.2,
-            ease: "power3.inOut",
-          },
-          0.1
-        )
+        // Separador: scale da esquerda
         .from(
           dividerRef.current,
           {
             scaleX: 0,
             transformOrigin: "left",
-            duration: 0.7,
+            duration: 0.6,
             ease: "power2.inOut",
           },
-          "-=0.5"
+          "-=0.2"
         )
+        // Tagline: sobe com fade
         .from(
           taglineRef.current,
           {
-            y: 30,
+            y: 40,
             opacity: 0,
             duration: 0.8,
             ease: "power3.out",
           },
-          "-=0.4"
+          "-=0.3"
         )
+        // CTA: sobe suavemente
         .from(
           ctaRef.current,
           {
@@ -77,95 +334,102 @@ export default function Hero() {
           },
           "-=0.5"
         );
+
+      // Divider scroll-out: fromTo is explicit about both start and end states,
+      // so scrub reversal always restores scaleX:1 / opacity:1 correctly.
+      // Starts at 30% scroll (after name is well visible) → fully gone at hero bottom.
+      gsap.fromTo(
+        dividerRef.current,
+        { scaleX: 1, opacity: 1 },
+        {
+          scaleX: 0,
+          opacity: 0,
+          transformOrigin: "right",
+          ease: "none",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "30% top",
+            end: "bottom top",
+            scrub: 1,
+            invalidateOnRefresh: true,
+          },
+        }
+      );
     }, containerRef);
 
     return () => ctx.revert();
   }, []);
 
-  // Cursor parallax on hero image
-  useEffect(() => {
-    const section = containerRef.current;
-    const inner = imageInnerRef.current;
-    if (!section || !inner) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = section.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width - 0.5;
-      const y = (e.clientY - rect.top) / rect.height - 0.5;
-      gsap.to(inner, {
-        x: x * -18,
-        y: y * -18,
-        duration: 0.9,
-        ease: "power2.out",
-      });
-    };
-
-    const handleMouseLeave = () => {
-      gsap.to(inner, { x: 0, y: 0, duration: 0.8, ease: "power2.out" });
-    };
-
-    section.addEventListener("mousemove", handleMouseMove);
-    section.addEventListener("mouseleave", handleMouseLeave);
-    return () => {
-      section.removeEventListener("mousemove", handleMouseMove);
-      section.removeEventListener("mouseleave", handleMouseLeave);
-    };
-  }, []);
-
-  // Magnetic CTA
-  useMagnetic(ctaRef, 0.3);
-
   return (
     <section
       ref={containerRef}
-      className="min-h-screen flex flex-col pt-32 md:pt-40 pb-16 md:pb-24 relative overflow-hidden"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="relative overflow-hidden min-h-screen flex flex-col justify-between pt-32 md:pt-40 pb-16 md:pb-24"
     >
-      {/* Photo — right side, cursor parallax */}
+      {/* Layer 1 — background image (CSS, position absolute) */}
       <div
-        ref={imageWrapRef}
-        className="hidden md:block absolute right-0 top-0 h-full w-[42%] overflow-hidden"
-        style={{ clipPath: "inset(0 0 0% 0)" }}
-      >
-        <div ref={imageInnerRef} className="w-full h-full scale-110">
-          <Image
-            src="/images/rodrigo.jpg"
-            alt="Rodrigo Alarcão"
-            fill
-            className="object-cover object-top"
-            priority
-          />
-        </div>
-      </div>
+        aria-hidden="true"
+        className="absolute inset-0"
+        style={{
+          backgroundImage: "url('/images/hero-bg.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
+        }}
+      />
 
-      <div className="container-site w-full flex flex-col flex-1">
+      {/* Layer 1b — bottom gradient: fades hero into site bg colour (#0A0A09) */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 h-48 z-10 pointer-events-none"
+        style={{
+          background: "linear-gradient(to bottom, transparent, #0A0A09)",
+        }}
+      />
 
-        {/* Name — mask reveal, each line in overflow-hidden container */}
-        <h1 className="font-display font-extrabold text-hero-name text-text leading-[0.92] tracking-tight md:max-w-[55%]">
-          <span className="block overflow-hidden">
-            <span ref={line1Ref} className="block">Rodrigo</span>
-          </span>
-          <span className="block overflow-hidden">
-            <span ref={line2Ref} className="block">Alarcão</span>
-          </span>
+      {/* Layer 2 — canvas: organic splines + cursor reveal mask */}
+      <canvas
+        ref={canvasRef}
+        aria-hidden="true"
+        className="absolute inset-0 z-10 pointer-events-none w-full h-full"
+      />
+
+      {/* Layer 3 — text content (unchanged JSX) */}
+      <div className="w-full container-site relative z-20 flex flex-col gap-16 md:gap-0 md:justify-between md:h-full md:flex-1">
+
+        {/* Nome — Rodrigo light italic / Alarcão extrabold */}
+        <h1
+          ref={nameRef}
+          className="font-display text-hero-name text-text leading-[0.92] tracking-tight"
+        >
+          <span className="block font-light italic">Rodrigo</span>
+          <span className="block font-extrabold">Alarcão</span>
         </h1>
 
-        {/* Divider + bottom block */}
-        <div className="mt-auto">
+        {/* Separador em accent + rodapé do hero */}
+        <div className="mt-10 md:mt-14">
+          {/* 1px accent divider — PRD secção 2.4 */}
           <div
             ref={dividerRef}
-            className="w-full md:w-[55%] border-t border-accent mb-10 md:mb-14"
+            className="w-full border-t border-accent mb-10 md:mb-14"
           />
 
-          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 md:gap-16 md:max-w-[55%]">
-            <div ref={taglineRef} className="flex flex-col gap-1">
-              <p className="text-hero-tagline font-body font-light text-text leading-[1.4]">
-                Projeto, estruturo e construo produtos digitais.
-              </p>
-              <p className="text-hero-tagline font-body font-light italic text-dim leading-[1.4]">
-                De ideia ao MVP em semanas.
-              </p>
-            </div>
+          {/* Tagline + CTA — editorial: texto à esquerda, CTA à direita */}
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 md:gap-16">
+            <p
+              ref={taglineRef}
+              className="font-body text-text max-w-[480px] leading-[1.5] text-[1rem] md:text-[1.0625rem]"
+            >
+              <span className="block font-semibold">
+                Projeto, estruturo e construo produtos digitais
+              </span>
+              <span className="block font-light italic mt-1">
+                Da ideia ao MVP, em semanas.
+              </span>
+            </p>
 
+            {/* CTA — confiante, sem implorar atenção */}
             <a
               ref={ctaRef}
               href="#contacto"
