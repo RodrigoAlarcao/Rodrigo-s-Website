@@ -131,38 +131,53 @@ export default function Hero() {
       // fadeVal → 1 on hover, → 0 on leave (0.055 ≈ ~0.8s fade)
       fadeVal.current += ((isHovering.current ? 1 : 0) - fadeVal.current) * 0.055;
 
-      // Step 3: Cursor reveal — halftone dot grid (destination-out)
-      // Each dot punches a hole through the mask; dot radius ∝ proximity to cursor.
-      // Produces a geometric halftone pattern instead of a plain circle.
+      // Step 3: Organic blob reveal (destination-out)
+      // A closed Catmull-Rom spline filled with a soft radial gradient punches
+      // an organic, non-circular hole through the wireframe, revealing the portrait.
       const cursorActive = fadeVal.current > 0.01;
       if (cursorActive) {
         const cx = curPos.current.x, cy = curPos.current.y;
+        const BLOB_R  = 300; // base radius (px)
+        const N       = 14;  // control points — more = smoother undulation
 
-        const DOT_SPACING = 60;   // px between dot centres
-        const MAX_R       = 28;   // px — dots nearly touching at cursor (gap ~4px)
-        const ZONE        = 760;  // px — outer edge of influence
+        // Organic shape: two low-frequency harmonics on the radius, animated by time
+        const blobPts = Array.from({ length: N }, (_, i) => {
+          const angle = (2 * Math.PI * i) / N;
+          const r = BLOB_R * fadeVal.current * (
+            1.0
+            + 0.18 * Math.sin(i * 2.0 + time * 0.28)
+            + 0.10 * Math.sin(i * 3.3 + time * 0.17)
+          );
+          return { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r };
+        });
+
+        // Closed Catmull-Rom → cubic bezier
+        ctx.beginPath();
+        ctx.moveTo(blobPts[0].x, blobPts[0].y);
+        for (let i = 0; i < N; i++) {
+          const p0 = blobPts[(i - 1 + N) % N];
+          const p1 = blobPts[i];
+          const p2 = blobPts[(i + 1) % N];
+          const p3 = blobPts[(i + 2) % N];
+          ctx.bezierCurveTo(
+            p1.x + (p2.x - p0.x) / 6, p1.y + (p2.y - p0.y) / 6,
+            p2.x - (p3.x - p1.x) / 6, p2.y - (p3.y - p1.y) / 6,
+            p2.x, p2.y
+          );
+        }
+        ctx.closePath();
+
+        // Radial gradient fill: solid at centre → transparent at edge (soft reveal)
+        const outerR = BLOB_R * fadeVal.current * 1.28;
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, outerR);
+        grad.addColorStop(0.0,  "rgba(0,0,0,1.0)");
+        grad.addColorStop(0.55, "rgba(0,0,0,0.95)");
+        grad.addColorStop(0.85, "rgba(0,0,0,0.45)");
+        grad.addColorStop(1.0,  "rgba(0,0,0,0.0)");
 
         ctx.globalCompositeOperation = "destination-out";
-        ctx.fillStyle = "rgba(0,0,0,1)";
-
-        // Only iterate dots within the influence zone
-        const x0 = Math.floor((cx - ZONE) / DOT_SPACING) * DOT_SPACING;
-        const y0 = Math.floor((cy - ZONE) / DOT_SPACING) * DOT_SPACING;
-
-        for (let dx = x0; dx <= cx + ZONE; dx += DOT_SPACING) {
-          for (let dy = y0; dy <= cy + ZONE; dy += DOT_SPACING) {
-            const dist = Math.hypot(dx - cx, dy - cy);
-            if (dist >= ZONE) continue;
-            const t = 1 - dist / ZONE;
-            // Smoothstep gives a crisper centre, softer fade at edge
-            const ss = t * t * (3 - 2 * t);
-            const r  = MAX_R * ss * fadeVal.current;
-            if (r < 0.6) continue;
-            ctx.beginPath();
-            ctx.arc(dx, dy, r, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
+        ctx.fillStyle = grad;
+        ctx.fill();
       }
 
       ctx.globalCompositeOperation = "source-over";
