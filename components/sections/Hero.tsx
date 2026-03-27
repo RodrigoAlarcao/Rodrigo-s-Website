@@ -118,18 +118,38 @@ export default function Hero() {
       curPos.current.x += (tgtPos.current.x - curPos.current.x) * 0.072;
       curPos.current.y += (tgtPos.current.y - curPos.current.y) * 0.072;
 
-      // Step 3: Cursor reveal (destination-out)
+      // Step 3: Cursor reveal — halftone dot grid (destination-out)
+      // Each dot punches a hole through the mask; dot radius ∝ proximity to cursor.
+      // Produces a geometric halftone pattern instead of a plain circle.
       const cursorActive = tgtPos.current.x > -1000;
       if (cursorActive) {
         const cx = curPos.current.x, cy = curPos.current.y;
-        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300);
-        grad.addColorStop(0,    "rgba(0,0,0,1.0)");
-        grad.addColorStop(0.45, "rgba(0,0,0,0.97)");
-        grad.addColorStop(0.75, "rgba(0,0,0,0.5)");
-        grad.addColorStop(1,    "rgba(0,0,0,0.0)");
+
+        const DOT_SPACING = 26;   // px between dot centres
+        const MAX_R       = 11;   // px — max dot radius (at cursor)
+        const ZONE        = 320;  // px — outer edge of influence
+
         ctx.globalCompositeOperation = "destination-out";
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "rgba(0,0,0,1)";
+
+        // Only iterate dots within the influence zone
+        const x0 = Math.floor((cx - ZONE) / DOT_SPACING) * DOT_SPACING;
+        const y0 = Math.floor((cy - ZONE) / DOT_SPACING) * DOT_SPACING;
+
+        for (let dx = x0; dx <= cx + ZONE; dx += DOT_SPACING) {
+          for (let dy = y0; dy <= cy + ZONE; dy += DOT_SPACING) {
+            const dist = Math.hypot(dx - cx, dy - cy);
+            if (dist >= ZONE) continue;
+            const t = 1 - dist / ZONE;
+            // Smoothstep gives a crisper centre, softer fade at edge
+            const ss = t * t * (3 - 2 * t);
+            const r  = MAX_R * ss;
+            if (r < 0.6) continue;
+            ctx.beginPath();
+            ctx.arc(dx, dy, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
       }
 
       ctx.globalCompositeOperation = "source-over";
