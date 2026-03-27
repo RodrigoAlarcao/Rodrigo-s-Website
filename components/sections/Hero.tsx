@@ -35,43 +35,41 @@ export default function Hero() {
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
 
-    // 3 well-separated blobs — guaranteed no overlap between blobs
-    // Separation check: min distance between centres > sum of radii
-    // (0.15,0.35,r=0.20) ↔ (0.80,0.35,r=0.23): dist=0.65H > 0.43H ✓
-    // (0.15,0.35,r=0.20) ↔ (0.48,0.82,r=0.16): dist=0.59H > 0.36H ✓
-    // (0.80,0.35,r=0.23) ↔ (0.48,0.82,r=0.16): dist=0.59H > 0.39H ✓
-    const blobDefs: Array<{ cx: number; cy: number; r: number; n: number }> = [
-      { cx: 0.15, cy: 0.35, r: 0.20, n: 12 }, // left
-      { cx: 0.80, cy: 0.35, r: 0.23, n: 12 }, // right
-      { cx: 0.48, cy: 0.82, r: 0.16, n: 10 }, // bottom-centre
+    // Asymmetric 3-blob layout — one dominant + medium + small
+    // r is fraction of viewport height; cx/cy normalised to W/H
+    const blobDefs: Array<{
+      cx: number; cy: number; r: number; n: number; rings: number;
+    }> = [
+      { cx: 0.78, cy: 0.42, r: 0.38, n: 16, rings: 7 }, // large — right, dominant
+      { cx: 0.10, cy: 0.30, r: 0.21, n: 13, rings: 5 }, // medium — upper left
+      { cx: 0.38, cy: 0.80, r: 0.12, n: 10, rings: 3 }, // small — lower centre
     ];
 
-    // 3 concentric rings per blob — scales chosen so inner rings never cross outer:
-    // scale[i+1] * (1 + ar) < scale[i] * (1 - ar)  with ar=0.08
-    // 0.60 * 1.08 = 0.648 < 1.0 * 0.92 = 0.92 ✓
-    // 0.32 * 1.08 = 0.346 < 0.60 * 0.92 = 0.552 ✓
-    const ringDefs = [
-      { scale: 1.00, alpha: 0.26 },
-      { scale: 0.60, alpha: 0.16 },
-      { scale: 0.32, alpha: 0.09 },
-    ];
+    // Per-blob concentric ring scales so inner rings NEVER cross outer.
+    // With ar=0.05: need Δ > 2*s*0.05/1.05 ≈ 0.095*s.
+    // Uniform step Δ=0.14 satisfies this at all scales (0.14 > 0.095).
+    // Alphas fade from 0.26 (outer) toward 0 (innermost).
+    const makeRings = (count: number) =>
+      Array.from({ length: count }, (_, ri) => ({
+        scale: 1.0 - ri * 0.14,
+        alpha: 0.26 * Math.pow(1 - ri / count, 0.7),
+      }));
 
-    // Per-point animation params — multi-harmonic baseR for organic look
+    // Per-point animation params — gentler harmonics for smoother silhouette
     const blobs = blobDefs.map((def, bi) =>
       Array.from({ length: def.n }, (_, i) => ({
         baseAngle: (2 * Math.PI * i) / def.n + bi * 0.61,
-        // Multi-harmonic radius: 3 overlapping sine waves → irregular, non-round shape
+        // Two low-frequency harmonics only → rounder, smoother blob shape
         baseR:
           1.0 +
-          0.15 * Math.sin(i * 2.1 + bi * 1.7) +
-          0.08 * Math.sin(i * 3.8 + bi * 0.9) +
-          0.04 * Math.sin(i * 5.3 + bi * 2.4),
-        fr:  0.28 + bi * 0.07 + i * 0.013, // radial oscillation freq (rad/s)
-        fa:  0.19 + bi * 0.05 + i * 0.009, // angular oscillation freq (rad/s)
+          0.10 * Math.sin(i * 1.8 + bi * 1.7) +
+          0.05 * Math.sin(i * 3.1 + bi * 0.9),
+        fr:  0.22 + bi * 0.06 + i * 0.010, // radial oscillation freq (rad/s)
+        fa:  0.15 + bi * 0.04 + i * 0.007, // angular oscillation freq (rad/s)
         pr:  (bi * 1.3 + i * 0.9) % (2 * Math.PI),
         pa:  (bi * 0.7 + i * 1.4) % (2 * Math.PI),
-        ar:  0.08, // radial amplitude — kept small to preserve non-crossing guarantee
-        aa:  0.06, // angular amplitude (radians)
+        ar:  0.05, // radial amplitude — small to keep rings non-crossing
+        aa:  0.04, // angular amplitude (radians) — subtle, keeps curves smooth
       }))
     );
 
@@ -168,18 +166,18 @@ export default function Hero() {
           return { x, y };
         });
 
-        // Draw each ring — inner rings scale outer pts toward blob centre
-        ringDefs.forEach((ring, ri) => {
+        // Draw each ring — inner rings are outer pts scaled toward blob centre
+        const rings = makeRings(def.rings);
+        rings.forEach((ring, ri) => {
           const pts =
             ri === 0
               ? outerPts
               : outerPts.map((op) => ({
-                  // Slight rotational offset per ring for extra organic feel
-                  x: bcx + (op.x - bcx) * ring.scale + Math.cos(t * 0.05 + ri * 1.2) * 0.5,
-                  y: bcy + (op.y - bcy) * ring.scale + Math.sin(t * 0.05 + ri * 1.2) * 0.5,
+                  x: bcx + (op.x - bcx) * ring.scale,
+                  y: bcy + (op.y - bcy) * ring.scale,
                 }));
 
-          ctx2d.strokeStyle = `rgba(255,255,255,${ring.alpha})`;
+          ctx2d.strokeStyle = `rgba(255,255,255,${ring.alpha.toFixed(3)})`;
           drawClosed(ctx2d, pts);
         });
       });
