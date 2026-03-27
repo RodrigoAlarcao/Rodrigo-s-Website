@@ -16,7 +16,6 @@ export default function Hero() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const tgtPos = useRef({ x: -9999, y: -9999 });
   const curPos = useRef({ x: -9999, y: -9999 });
-  const offscreenRef = useRef<HTMLCanvasElement | null>(null);
 
   // ── Canvas setup ─────────────────────────────────────────────────────────────
   useIsomorphicLayoutEffect(() => {
@@ -37,21 +36,67 @@ export default function Hero() {
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
 
-    // 8 Voronoi seeds — sunflower distribution (deterministic, larger cells)
-    const N = 8;
-    const phi = (1 + Math.sqrt(5)) / 2;
-    const seeds = Array.from({ length: N }, (_, i) => {
-      const r = Math.sqrt((i + 0.5) / N);
-      const theta = (2 * Math.PI * i) / phi;
-      return {
-        bx: 0.5 + r * 0.42 * Math.cos(theta),
-        by: 0.5 + r * 0.42 * Math.sin(theta),
-        fx: 0.28 + (i % 5) * 0.06,  // rad/s — ciclo ~15-22s
-        fy: 0.22 + (i % 7) * 0.04,  // rad/s — ciclo ~18-28s
-        px: (i * 1.7) % (2 * Math.PI),
-        py: (i * 2.3) % (2 * Math.PI),
-      };
-    });
+    // 5 organic flowing curves — each has 5 control points
+    // bx/by: base normalised position (0–1); ay: y-amplitude; fy: frequency rad/s; py: phase
+    const curves: Array<Array<{ bx: number; by: number; ay: number; fy: number; py: number }>> = [
+      [
+        { bx: 0.00, by: 0.12, ay: 0.05, fy: 0.20, py: 0.0  },
+        { bx: 0.28, by: 0.06, ay: 0.07, fy: 0.17, py: 1.4  },
+        { bx: 0.52, by: 0.18, ay: 0.06, fy: 0.22, py: 2.8  },
+        { bx: 0.76, by: 0.10, ay: 0.05, fy: 0.18, py: 0.9  },
+        { bx: 1.00, by: 0.15, ay: 0.07, fy: 0.15, py: 3.5  },
+      ],
+      [
+        { bx: 0.00, by: 0.32, ay: 0.06, fy: 0.18, py: 0.7  },
+        { bx: 0.30, by: 0.42, ay: 0.08, fy: 0.23, py: 2.1  },
+        { bx: 0.55, by: 0.28, ay: 0.07, fy: 0.16, py: 1.5  },
+        { bx: 0.78, by: 0.44, ay: 0.06, fy: 0.21, py: 3.8  },
+        { bx: 1.00, by: 0.35, ay: 0.08, fy: 0.19, py: 0.3  },
+      ],
+      [
+        { bx: 0.00, by: 0.54, ay: 0.07, fy: 0.15, py: 2.0  },
+        { bx: 0.25, by: 0.62, ay: 0.09, fy: 0.21, py: 0.5  },
+        { bx: 0.50, by: 0.47, ay: 0.08, fy: 0.18, py: 3.1  },
+        { bx: 0.75, by: 0.60, ay: 0.07, fy: 0.24, py: 1.8  },
+        { bx: 1.00, by: 0.52, ay: 0.06, fy: 0.16, py: 4.2  },
+      ],
+      [
+        { bx: 0.00, by: 0.74, ay: 0.06, fy: 0.22, py: 1.2  },
+        { bx: 0.32, by: 0.66, ay: 0.08, fy: 0.16, py: 3.4  },
+        { bx: 0.58, by: 0.80, ay: 0.07, fy: 0.20, py: 0.6  },
+        { bx: 0.80, by: 0.70, ay: 0.09, fy: 0.17, py: 2.5  },
+        { bx: 1.00, by: 0.76, ay: 0.06, fy: 0.23, py: 1.0  },
+      ],
+      [
+        { bx: 0.00, by: 0.90, ay: 0.05, fy: 0.17, py: 3.0  },
+        { bx: 0.35, by: 0.96, ay: 0.06, fy: 0.22, py: 0.8  },
+        { bx: 0.60, by: 0.86, ay: 0.07, fy: 0.19, py: 2.3  },
+        { bx: 0.82, by: 0.94, ay: 0.05, fy: 0.15, py: 4.0  },
+        { bx: 1.00, by: 0.91, ay: 0.06, fy: 0.20, py: 1.6  },
+      ],
+    ];
+
+    // Draw Catmull-Rom spline via cubic bezier approximation
+    const drawSpline = (
+      ctx: CanvasRenderingContext2D,
+      pts: Array<{ x: number; y: number }>
+    ) => {
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p0 = pts[Math.max(0, i - 1)];
+        const p1 = pts[i];
+        const p2 = pts[i + 1];
+        const p3 = pts[Math.min(pts.length - 1, i + 2)];
+        // Catmull-Rom → cubic bezier control points
+        const cp1x = p1.x + (p2.x - p0.x) / 6;
+        const cp1y = p1.y + (p2.y - p0.y) / 6;
+        const cp2x = p2.x - (p3.x - p1.x) / 6;
+        const cp2y = p2.y - (p3.y - p1.y) / 6;
+        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+      }
+      ctx.stroke();
+    };
 
     // Draw callback — registered on GSAP ticker
     const draw = (time: number) => {
@@ -60,63 +105,8 @@ export default function Hero() {
       if (W === 0 || H === 0) return;
 
       const ctx2d = canvas.getContext("2d")!;
-      const SCALE = 4; // 1/4 resolution — better quality for thin lines
-      const ow = Math.ceil(W / SCALE);
-      const oh = Math.ceil(H / SCALE);
 
-      // ── Voronoi on offscreen canvas (1/4 resolution) ──────────────────────
-      if (!offscreenRef.current) {
-        offscreenRef.current = document.createElement("canvas");
-      }
-      const off = offscreenRef.current;
-      off.width = ow;
-      off.height = oh;
-      const octx = off.getContext("2d")!;
-      const imgData = octx.createImageData(ow, oh);
-      const data = imgData.data;
-
-      // Animate seed positions — time already in seconds from GSAP ticker
-      const t = time;
-      const sPos = seeds.map((s) => ({
-        x: (s.bx + 0.04 * Math.cos(t * s.fx + s.px)) * ow,
-        y: (s.by + 0.04 * Math.sin(t * s.fy + s.py)) * oh,
-      }));
-
-      // Per-pixel Voronoi: distance to cell boundary for thin-line rendering
-      // distToBoundary ≈ (dist2nd - distNearest) / 2 — pixels to the nearest edge
-      const LINE_HALF = 0.55; // offscreen pixels → ~2px at full res after 4× upscale
-      for (let py = 0; py < oh; py++) {
-        for (let px = 0; px < ow; px++) {
-          let d1 = Infinity;
-          let d2 = Infinity;
-          for (const s of sPos) {
-            const dx = px - s.x;
-            const dy = py - s.y;
-            const d = dx * dx + dy * dy;
-            if (d < d1) {
-              d2 = d1;
-              d1 = d;
-            } else if (d < d2) {
-              d2 = d;
-            }
-          }
-          const distToBoundary = (Math.sqrt(d2) - Math.sqrt(d1)) * 0.5;
-          const idx = (py * ow + px) * 4;
-          if (distToBoundary < LINE_HALF) {
-            // White at 60% max opacity, fades to 0 at line edge
-            const alpha = (1 - distToBoundary / LINE_HALF) * 153;
-            data[idx] = 255;
-            data[idx + 1] = 255;
-            data[idx + 2] = 255;
-            data[idx + 3] = alpha;
-          } else {
-            data[idx + 3] = 0;
-          }
-        }
-      }
-      octx.putImageData(imgData, 0, 0);
-
-      // ── Main canvas compositing ───────────────────────────────────────────
+      // ── Compositing ───────────────────────────────────────────────────────
       ctx2d.clearRect(0, 0, W, H);
 
       // Step 1: Solid black mask — hides the CSS image layer below
@@ -134,22 +124,30 @@ export default function Hero() {
         const cx = curPos.current.x;
         const cy = curPos.current.y;
         const grad = ctx2d.createRadialGradient(cx, cy, 0, cx, cy, 300);
-        grad.addColorStop(0, "rgba(0,0,0,1.0)");
+        grad.addColorStop(0,    "rgba(0,0,0,1.0)");
         grad.addColorStop(0.45, "rgba(0,0,0,0.97)");
         grad.addColorStop(0.75, "rgba(0,0,0,0.5)");
-        grad.addColorStop(1, "rgba(0,0,0,0.0)");
+        grad.addColorStop(1,    "rgba(0,0,0,0.0)");
         ctx2d.globalCompositeOperation = "destination-out";
         ctx2d.fillStyle = grad;
         ctx2d.fillRect(0, 0, W, H);
       }
 
-      // Step 4: Voronoi — thin white lines, minimal blur to smooth 4× upscale
+      // Step 4: Organic splines — thin white lines over everything
       ctx2d.globalCompositeOperation = "source-over";
-      ctx2d.imageSmoothingEnabled = true;
-      ctx2d.imageSmoothingQuality = "high";
-      ctx2d.filter = "blur(1.5px)";
-      ctx2d.drawImage(off, 0, 0, W, H);
-      ctx2d.filter = "none";
+      ctx2d.strokeStyle = "rgba(255,255,255,0.28)";
+      ctx2d.lineWidth = 1;
+      ctx2d.lineCap = "round";
+      ctx2d.lineJoin = "round";
+
+      const t = time; // seconds, from GSAP ticker
+      for (const curveDef of curves) {
+        const pts = curveDef.map((p) => ({
+          x: p.bx * W,
+          y: (p.by + p.ay * Math.sin(t * p.fy + p.py)) * H,
+        }));
+        drawSpline(ctx2d, pts);
+      }
     };
 
     gsap.ticker.add(draw);
@@ -257,7 +255,7 @@ export default function Hero() {
         }}
       />
 
-      {/* Layer 2 — canvas: Voronoi + reveal mask */}
+      {/* Layer 2 — canvas: organic splines + cursor reveal mask */}
       <canvas
         ref={canvasRef}
         aria-hidden="true"
