@@ -335,7 +335,10 @@ export default function Hero() {
           "-=0.5"
         );
 
-      // Divider scroll-out: encolhe para a direita conforme o hero sai de cena
+      // Divider scroll-out: linked to the full scroll journey past the hero.
+      // start="top top" → hero's top edge hits viewport top (user just started scrolling).
+      // end="bottom top" → hero is fully off-screen.
+      // scrub:1 makes it track scroll precisely and reverse on scroll-up.
       gsap.to(dividerRef.current, {
         scaleX: 0,
         opacity: 0,
@@ -343,9 +346,9 @@ export default function Hero() {
         ease: "none",
         scrollTrigger: {
           trigger: containerRef.current,
-          start: "center top",
+          start: "top top",
           end: "bottom top",
-          scrub: 0.6,
+          scrub: 1,
         },
       });
     }, containerRef);
