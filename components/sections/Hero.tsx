@@ -35,157 +35,169 @@ export default function Hero() {
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
 
-    // 5 large blobs spread across all viewport quadrants — together they fill
-    // the canvas like a topographic landscape. Radii > 0.4H so rings extend
-    // beyond the edges, which is intentional (no dead corners).
-    // cx normalised to W, cy to H; r fraction of H.
-    const blobDefs: Array<{
-      cx: number; cy: number; r: number; n: number; rings: number;
-    }> = [
-      { cx: 0.82, cy: 0.22, r: 0.52, n: 18, rings: 10 }, // top-right, dominant
-      { cx: 0.08, cy: 0.50, r: 0.44, n: 17, rings: 9  }, // left-centre
-      { cx: 0.56, cy: 0.88, r: 0.46, n: 17, rings: 8  }, // bottom-centre
-      { cx: 0.36, cy: 0.08, r: 0.34, n: 15, rings: 7  }, // top-centre-left
-      { cx: 0.96, cy: 0.76, r: 0.36, n: 15, rings: 6  }, // right-bottom
+    // ── Marching squares iso-contour approach ────────────────────────────────
+    // Contour lines of a continuous scalar field NEVER cross each other.
+    // Height field h(x,y) = sum of Gaussian "hills". Marching squares extracts
+    // iso-lines at evenly-spaced levels → topographic map, zero crossings.
+
+    // Edge table for marching squares (bits: TL=8, TR=4, BR=2, BL=1).
+    // Each entry is a list of [edgeA, edgeB] segment(s) to draw.
+    // Edges: 0=bottom, 1=right, 2=top, 3=left
+    const MS_SEGS: Array<Array<[number, number]>> = [
+      [],              // 0  0000
+      [[3, 0]],        // 1  0001 BL
+      [[0, 1]],        // 2  0010 BR
+      [[3, 1]],        // 3  0011 BL+BR
+      [[1, 2]],        // 4  0100 TR
+      [[1, 2],[3, 0]], // 5  0101 TR+BL saddle
+      [[0, 2]],        // 6  0110 TR+BR
+      [[3, 2]],        // 7  0111 TR+BR+BL
+      [[2, 3]],        // 8  1000 TL
+      [[2, 0]],        // 9  1001 TL+BL
+      [[2, 3],[0, 1]], // 10 1010 TL+BR saddle
+      [[2, 1]],        // 11 1011 TL+BR+BL
+      [[1, 3]],        // 12 1100 TL+TR
+      [[1, 0]],        // 13 1101 TL+TR+BL
+      [[0, 3]],        // 14 1110 TL+TR+BR
+      [],              // 15 1111
     ];
 
-    // Concentric ring scales — uniform step Δ=0.09 with ar=0.04:
-    // need Δ > 2*s*0.04/1.04 ≈ 0.077  →  0.09 > 0.077 ✓ at all scales.
-    // Tight spacing gives a dense topographic feel (like Lando Norris site).
-    // Alphas are subtle — many overlapping blobs would otherwise be too heavy.
-    const makeRings = (count: number) =>
-      Array.from({ length: count }, (_, ri) => ({
-        scale: 1.0 - ri * 0.09,
-        alpha: 0.18 * Math.pow(1 - ri / count, 0.55),
-      }));
+    // Gaussian "mountains" — cx/cy normalised [0,1], r fraction of H, A peak height
+    // fx/fy = position oscillation frequencies (rad/s), phx/phy = phases
+    const mountains = [
+      { cx: 0.82, cy: 0.22, r: 0.40, A: 1.00, fx: 0.08, fy: 0.06, phx: 0.00, phy: 0.00 },
+      { cx: 0.08, cy: 0.50, r: 0.36, A: 0.88, fx: 0.07, fy: 0.05, phx: 1.30, phy: 0.90 },
+      { cx: 0.56, cy: 0.88, r: 0.38, A: 0.82, fx: 0.06, fy: 0.07, phx: 2.10, phy: 1.80 },
+      { cx: 0.36, cy: 0.08, r: 0.30, A: 0.72, fx: 0.09, fy: 0.06, phx: 3.20, phy: 2.50 },
+      { cx: 0.96, cy: 0.76, r: 0.32, A: 0.78, fx: 0.07, fy: 0.08, phx: 4.10, phy: 3.30 },
+      // Wide background hill — ensures outermost contours span the full canvas
+      { cx: 0.50, cy: 0.50, r: 0.78, A: 0.16, fx: 0.03, fy: 0.02, phx: 0.70, phy: 1.40 },
+    ];
 
-    // Per-point animation — moderate shape harmonics for fluid undulation,
-    // higher n keeps the Catmull-Rom curves very smooth.
-    const blobs = blobDefs.map((def, bi) =>
-      Array.from({ length: def.n }, (_, i) => ({
-        baseAngle: (2 * Math.PI * i) / def.n + bi * 0.61,
-        // Two harmonics at different frequencies → gently irregular, not circular
-        baseR:
-          1.0 +
-          0.12 * Math.sin(i * 1.7 + bi * 1.9) +
-          0.06 * Math.sin(i * 3.2 + bi * 0.8),
-        fr:  0.18 + bi * 0.05 + i * 0.008, // radial osc. freq (rad/s)
-        fa:  0.12 + bi * 0.03 + i * 0.006, // angular osc. freq (rad/s)
-        pr:  (bi * 1.3 + i * 0.9) % (2 * Math.PI),
-        pa:  (bi * 0.7 + i * 1.4) % (2 * Math.PI),
-        ar:  0.04, // radial osc. amplitude — small to preserve ring non-crossing
-        aa:  0.05, // angular osc. amplitude — gentle flow
-      }))
-    );
+    // 20 iso-levels spanning from near-zero (large outer contours) to near-peak
+    const N_LEVELS = 20;
+    const LEVELS = Array.from({ length: N_LEVELS }, (_, i) => 0.05 + i * 0.058);
 
-    // Closed Catmull-Rom spline via cubic bezier (wraps end→start)
-    const drawClosed = (
-      ctx: CanvasRenderingContext2D,
-      pts: Array<{ x: number; y: number }>
-    ) => {
-      const n = pts.length;
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 0; i < n; i++) {
-        const p0 = pts[(i - 1 + n) % n];
-        const p1 = pts[i];
-        const p2 = pts[(i + 1) % n];
-        const p3 = pts[(i + 2) % n];
-        ctx.bezierCurveTo(
-          p1.x + (p2.x - p0.x) / 6, p1.y + (p2.y - p0.y) / 6,
-          p2.x - (p3.x - p1.x) / 6, p2.y - (p3.y - p1.y) / 6,
-          p2.x, p2.y
-        );
+    // Grid: ~7px cells at typical 1440px wide → smooth enough, fast enough
+    const GW = 200, GH = 112;
+    const hField = new Float32Array((GW + 1) * (GH + 1));
+
+    // Cursor depression radius (px) — negative Gaussian pulls contours inward
+    const CURSOR_R = 160;
+
+    // Interpolate pixel coordinate along a cell edge at contour level `lv`
+    const edgePt = (
+      edge: number, gx: number, gy: number,
+      tl: number, tr: number, br: number, bl: number,
+      lv: number, W: number, H: number
+    ): [number, number] => {
+      let gxf: number, gyf: number;
+      switch (edge) {
+        case 0: gxf = gx + (lv - bl) / (br - bl); gyf = gy + 1; break;
+        case 1: gxf = gx + 1; gyf = gy + 1 - (lv - br) / (tr - br); break;
+        case 2: gxf = gx + (lv - tl) / (tr - tl); gyf = gy; break;
+        default: gxf = gx; gyf = gy + 1 - (lv - bl) / (tl - bl); break;
       }
-      ctx.stroke();
+      return [(gxf / GW) * W, (gyf / GH) * H];
     };
-
-    // Mouse attraction — outer ring pulled toward cursor; inner rings follow
-    const ATTRACT_RADIUS = 240;
-    const ATTRACT_STRENGTH = 45;
 
     const draw = (time: number) => {
       const W = canvas.width;
       const H = canvas.height;
       if (W === 0 || H === 0) return;
 
-      const ctx2d = canvas.getContext("2d")!;
-      ctx2d.clearRect(0, 0, W, H);
+      const ctx = canvas.getContext("2d")!;
+      ctx.clearRect(0, 0, W, H);
 
       // Step 1: Black mask
-      ctx2d.globalCompositeOperation = "source-over";
-      ctx2d.fillStyle = "#0A0A09";
-      ctx2d.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = "#0A0A09";
+      ctx.fillRect(0, 0, W, H);
 
       // Step 2: Lerp cursor
-      const lerpFactor = 0.072;
-      curPos.current.x += (tgtPos.current.x - curPos.current.x) * lerpFactor;
-      curPos.current.y += (tgtPos.current.y - curPos.current.y) * lerpFactor;
+      curPos.current.x += (tgtPos.current.x - curPos.current.x) * 0.072;
+      curPos.current.y += (tgtPos.current.y - curPos.current.y) * 0.072;
 
       // Step 3: Cursor reveal (destination-out)
       const cursorActive = tgtPos.current.x > -1000;
       if (cursorActive) {
-        const cx = curPos.current.x;
-        const cy = curPos.current.y;
-        const grad = ctx2d.createRadialGradient(cx, cy, 0, cx, cy, 300);
+        const cx = curPos.current.x, cy = curPos.current.y;
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 300);
         grad.addColorStop(0,    "rgba(0,0,0,1.0)");
         grad.addColorStop(0.45, "rgba(0,0,0,0.97)");
         grad.addColorStop(0.75, "rgba(0,0,0,0.5)");
         grad.addColorStop(1,    "rgba(0,0,0,0.0)");
-        ctx2d.globalCompositeOperation = "destination-out";
-        ctx2d.fillStyle = grad;
-        ctx2d.fillRect(0, 0, W, H);
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
       }
 
-      // Step 4: Concentric rings per blob
-      ctx2d.globalCompositeOperation = "source-over";
-      ctx2d.lineWidth = 1;
-      ctx2d.lineCap = "round";
-      ctx2d.lineJoin = "round";
+      ctx.globalCompositeOperation = "source-over";
+      ctx.lineWidth = 1;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
 
       const t = time;
-      const mx = curPos.current.x;
-      const my = curPos.current.y;
+      const mx = curPos.current.x, my = curPos.current.y;
 
-      blobDefs.forEach((def, bi) => {
-        const bcx = def.cx * W;
-        const bcy = def.cy * H;
+      // Step 4: Build height field
+      for (let gy = 0; gy <= GH; gy++) {
+        for (let gx = 0; gx <= GW; gx++) {
+          const px = (gx / GW) * W;
+          const py = (gy / GH) * H;
+          let val = 0;
 
-        // Compute outer ring points (with mouse attraction)
-        const outerPts = blobs[bi].map((p) => {
-          const angle = p.baseAngle + p.aa * Math.sin(t * p.fa + p.pa);
-          const rad   = def.r * H * p.baseR * (1 + p.ar * Math.sin(t * p.fr + p.pr));
-          let x = bcx + Math.cos(angle) * rad;
-          let y = bcy + Math.sin(angle) * rad;
+          for (const m of mountains) {
+            // Animate peak position with slow sinusoidal drift
+            const acx = (m.cx + 0.04 * Math.sin(t * m.fx + m.phx)) * W;
+            const acy = (m.cy + 0.03 * Math.sin(t * m.fy + m.phy)) * H;
+            const r2  = (m.r * H) ** 2;
+            const dx = px - acx, dy = py - acy;
+            val += m.A * Math.exp(-(dx * dx + dy * dy) / (2 * r2));
+          }
 
+          // Cursor depression — local minimum pulls nearby contours inward
           if (cursorActive) {
-            const dx = mx - x;
-            const dy = my - y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < ATTRACT_RADIUS && dist > 0) {
-              const force = ATTRACT_STRENGTH * Math.pow(1 - dist / ATTRACT_RADIUS, 2);
-              x += (dx / dist) * force;
-              y += (dy / dist) * force;
+            const dx = px - mx, dy = py - my;
+            val -= 0.40 * Math.exp(-(dx * dx + dy * dy) / (2 * CURSOR_R * CURSOR_R));
+          }
+
+          hField[gy * (GW + 1) + gx] = val;
+        }
+      }
+
+      // Step 5: Marching squares — one beginPath per level for uniform stroke
+      for (let li = 0; li < N_LEVELS; li++) {
+        const lv = LEVELS[li];
+        // Outer contours slightly brighter; inner contours near-invisible
+        const alpha = 0.17 - li * 0.005;
+        if (alpha <= 0) continue;
+        ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+        ctx.beginPath();
+
+        for (let gy = 0; gy < GH; gy++) {
+          for (let gx = 0; gx < GW; gx++) {
+            const tl = hField[gy * (GW + 1) + gx];
+            const tr = hField[gy * (GW + 1) + gx + 1];
+            const br = hField[(gy + 1) * (GW + 1) + gx + 1];
+            const bl = hField[(gy + 1) * (GW + 1) + gx];
+
+            const mask =
+              (tl >= lv ? 8 : 0) |
+              (tr >= lv ? 4 : 0) |
+              (br >= lv ? 2 : 0) |
+              (bl >= lv ? 1 : 0);
+
+            for (const [e0, e1] of MS_SEGS[mask]) {
+              const [x0, y0] = edgePt(e0, gx, gy, tl, tr, br, bl, lv, W, H);
+              const [x1, y1] = edgePt(e1, gx, gy, tl, tr, br, bl, lv, W, H);
+              ctx.moveTo(x0, y0);
+              ctx.lineTo(x1, y1);
             }
           }
-          return { x, y };
-        });
-
-        // Draw each ring — inner rings are outer pts scaled toward blob centre
-        const rings = makeRings(def.rings);
-        rings.forEach((ring, ri) => {
-          const pts =
-            ri === 0
-              ? outerPts
-              : outerPts.map((op) => ({
-                  x: bcx + (op.x - bcx) * ring.scale,
-                  y: bcy + (op.y - bcy) * ring.scale,
-                }));
-
-          ctx2d.strokeStyle = `rgba(255,255,255,${ring.alpha.toFixed(3)})`;
-          drawClosed(ctx2d, pts);
-        });
-      });
+        }
+        ctx.stroke();
+      }
     };
 
     gsap.ticker.add(draw);
