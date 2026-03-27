@@ -8,8 +8,8 @@
   --color-surface: #111110;
   --color-accent:  #E8D5B0;
   --color-text:    #EDEAE3;
-  --color-dim:     #6B6860;
-  --color-border:  rgba(255, 255, 255, 0.06);
+  --color-dim:     #9E9894;
+  --color-border:  rgba(255, 255, 255, 0.12);
 
   --font-display: 'Cabinet Grotesk', sans-serif;
   --font-body:    'DM Sans', sans-serif;
@@ -122,5 +122,13 @@ body::before {
   .container-site {
     padding-left: 2.5rem;
     padding-right: 2.5rem;
+  }
+}
+
+/* ─── Custom Cursor ──────────────────────────────────────────────── */
+/* Hide default cursor on fine-pointer devices (desktop/laptop) */
+@media (pointer: fine) {
+  html, html * {
+    cursor: none !important;
   }
 }
