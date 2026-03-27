@@ -35,41 +35,46 @@ export default function Hero() {
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
 
-    // Asymmetric 3-blob layout — one dominant + medium + small
-    // r is fraction of viewport height; cx/cy normalised to W/H
+    // 5 large blobs spread across all viewport quadrants — together they fill
+    // the canvas like a topographic landscape. Radii > 0.4H so rings extend
+    // beyond the edges, which is intentional (no dead corners).
+    // cx normalised to W, cy to H; r fraction of H.
     const blobDefs: Array<{
       cx: number; cy: number; r: number; n: number; rings: number;
     }> = [
-      { cx: 0.78, cy: 0.42, r: 0.38, n: 16, rings: 7 }, // large — right, dominant
-      { cx: 0.10, cy: 0.30, r: 0.21, n: 13, rings: 5 }, // medium — upper left
-      { cx: 0.38, cy: 0.80, r: 0.12, n: 10, rings: 3 }, // small — lower centre
+      { cx: 0.82, cy: 0.22, r: 0.52, n: 18, rings: 10 }, // top-right, dominant
+      { cx: 0.08, cy: 0.50, r: 0.44, n: 17, rings: 9  }, // left-centre
+      { cx: 0.56, cy: 0.88, r: 0.46, n: 17, rings: 8  }, // bottom-centre
+      { cx: 0.36, cy: 0.08, r: 0.34, n: 15, rings: 7  }, // top-centre-left
+      { cx: 0.96, cy: 0.76, r: 0.36, n: 15, rings: 6  }, // right-bottom
     ];
 
-    // Per-blob concentric ring scales so inner rings NEVER cross outer.
-    // With ar=0.05: need Δ > 2*s*0.05/1.05 ≈ 0.095*s.
-    // Uniform step Δ=0.14 satisfies this at all scales (0.14 > 0.095).
-    // Alphas fade from 0.26 (outer) toward 0 (innermost).
+    // Concentric ring scales — uniform step Δ=0.09 with ar=0.04:
+    // need Δ > 2*s*0.04/1.04 ≈ 0.077  →  0.09 > 0.077 ✓ at all scales.
+    // Tight spacing gives a dense topographic feel (like Lando Norris site).
+    // Alphas are subtle — many overlapping blobs would otherwise be too heavy.
     const makeRings = (count: number) =>
       Array.from({ length: count }, (_, ri) => ({
-        scale: 1.0 - ri * 0.14,
-        alpha: 0.26 * Math.pow(1 - ri / count, 0.7),
+        scale: 1.0 - ri * 0.09,
+        alpha: 0.18 * Math.pow(1 - ri / count, 0.55),
       }));
 
-    // Per-point animation params — gentler harmonics for smoother silhouette
+    // Per-point animation — moderate shape harmonics for fluid undulation,
+    // higher n keeps the Catmull-Rom curves very smooth.
     const blobs = blobDefs.map((def, bi) =>
       Array.from({ length: def.n }, (_, i) => ({
         baseAngle: (2 * Math.PI * i) / def.n + bi * 0.61,
-        // Two low-frequency harmonics only → rounder, smoother blob shape
+        // Two harmonics at different frequencies → gently irregular, not circular
         baseR:
           1.0 +
-          0.10 * Math.sin(i * 1.8 + bi * 1.7) +
-          0.05 * Math.sin(i * 3.1 + bi * 0.9),
-        fr:  0.22 + bi * 0.06 + i * 0.010, // radial oscillation freq (rad/s)
-        fa:  0.15 + bi * 0.04 + i * 0.007, // angular oscillation freq (rad/s)
+          0.12 * Math.sin(i * 1.7 + bi * 1.9) +
+          0.06 * Math.sin(i * 3.2 + bi * 0.8),
+        fr:  0.18 + bi * 0.05 + i * 0.008, // radial osc. freq (rad/s)
+        fa:  0.12 + bi * 0.03 + i * 0.006, // angular osc. freq (rad/s)
         pr:  (bi * 1.3 + i * 0.9) % (2 * Math.PI),
         pa:  (bi * 0.7 + i * 1.4) % (2 * Math.PI),
-        ar:  0.05, // radial amplitude — small to keep rings non-crossing
-        aa:  0.04, // angular amplitude (radians) — subtle, keeps curves smooth
+        ar:  0.04, // radial osc. amplitude — small to preserve ring non-crossing
+        aa:  0.05, // angular osc. amplitude — gentle flow
       }))
     );
 
