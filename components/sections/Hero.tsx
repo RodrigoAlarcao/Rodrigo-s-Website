@@ -42,7 +42,7 @@ export default function Hero() {
 
     // Preload wireframe image — drawn on canvas as the "always-visible" base layer
     const bgFront = new Image();
-    bgFront.src = "/images/hero-bg-front.jpg";
+    bgFront.src = "/images/hero-bg-front.png";
 
     // ── Marching squares iso-contour approach ────────────────────────────────
     // Contour lines of a continuous scalar field NEVER cross each other.
@@ -335,22 +335,26 @@ export default function Hero() {
           "-=0.5"
         );
 
-      // Divider scroll-out: linked to the full scroll journey past the hero.
-      // start="top top" → hero's top edge hits viewport top (user just started scrolling).
-      // end="bottom top" → hero is fully off-screen.
-      // scrub:1 makes it track scroll precisely and reverse on scroll-up.
-      gsap.to(dividerRef.current, {
-        scaleX: 0,
-        opacity: 0,
-        transformOrigin: "right",
-        ease: "none",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top top",
-          end: "bottom top",
-          scrub: 1,
-        },
-      });
+      // Divider scroll-out: fromTo is explicit about both start and end states,
+      // so scrub reversal always restores scaleX:1 / opacity:1 correctly.
+      // Starts at 30% scroll (after name is well visible) → fully gone at hero bottom.
+      gsap.fromTo(
+        dividerRef.current,
+        { scaleX: 1, opacity: 1 },
+        {
+          scaleX: 0,
+          opacity: 0,
+          transformOrigin: "right",
+          ease: "none",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "30% top",
+            end: "bottom top",
+            scrub: 1,
+            invalidateOnRefresh: true,
+          },
+        }
+      );
     }, containerRef);
 
     return () => ctx.revert();
@@ -368,7 +372,7 @@ export default function Hero() {
         aria-hidden="true"
         className="absolute inset-0"
         style={{
-          backgroundImage: "url('/images/hero-bg.jpg')",
+          backgroundImage: "url('/images/hero-bg.png')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
