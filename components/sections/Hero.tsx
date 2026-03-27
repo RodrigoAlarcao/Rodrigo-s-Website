@@ -37,17 +37,17 @@ export default function Hero() {
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
 
-    // 18 Voronoi seeds — sunflower distribution (deterministic)
-    const N = 18;
+    // 8 Voronoi seeds — sunflower distribution (deterministic, larger cells)
+    const N = 8;
     const phi = (1 + Math.sqrt(5)) / 2;
     const seeds = Array.from({ length: N }, (_, i) => {
       const r = Math.sqrt((i + 0.5) / N);
       const theta = (2 * Math.PI * i) / phi;
       return {
-        bx: 0.5 + r * 0.45 * Math.cos(theta),
-        by: 0.5 + r * 0.45 * Math.sin(theta),
-        fx: 0.012 + (i % 5) * 0.003,
-        fy: 0.009 + (i % 7) * 0.002,
+        bx: 0.5 + r * 0.42 * Math.cos(theta),
+        by: 0.5 + r * 0.42 * Math.sin(theta),
+        fx: 0.28 + (i % 5) * 0.06,  // rad/s — ciclo ~15-22s
+        fy: 0.22 + (i % 7) * 0.04,  // rad/s — ciclo ~18-28s
         px: (i * 1.7) % (2 * Math.PI),
         py: (i * 2.3) % (2 * Math.PI),
       };
@@ -75,11 +75,11 @@ export default function Hero() {
       const imgData = octx.createImageData(ow, oh);
       const data = imgData.data;
 
-      // Animate seed positions with slow sin/cos oscillation
-      const t = time * 0.001; // convert ms → seconds
+      // Animate seed positions — time already in seconds from GSAP ticker
+      const t = time;
       const sPos = seeds.map((s) => ({
-        x: (s.bx + 0.06 * Math.cos(t * s.fx + s.px)) * ow,
-        y: (s.by + 0.06 * Math.sin(t * s.fy + s.py)) * oh,
+        x: (s.bx + 0.04 * Math.cos(t * s.fx + s.px)) * ow,
+        y: (s.by + 0.04 * Math.sin(t * s.fy + s.py)) * oh,
       }));
 
       // Per-pixel Voronoi: find nearest (d1) and second-nearest (d2) distances
@@ -100,9 +100,9 @@ export default function Hero() {
           }
           const ratio = Math.sqrt(d1 / d2);
           const idx = (py * ow + px) * 4;
-          if (ratio >= 0.87) {
-            // Cell border region — warm beige, alpha ∝ proximity to border
-            const alpha = ((ratio - 0.87) / 0.13) * 255;
+          if (ratio >= 0.62) {
+            // Wider border region — warm beige, smooth fade, blur will soften further
+            const alpha = ((ratio - 0.62) / 0.38) * 200;
             data[idx] = 232;     // R
             data[idx + 1] = 213; // G
             data[idx + 2] = 176; // B
@@ -142,11 +142,13 @@ export default function Hero() {
         ctx2d.fillRect(0, 0, W, H);
       }
 
-      // Step 4: Voronoi borders — always visible on top
+      // Step 4: Voronoi borders — soft blur gives Worley-noise glow effect
       ctx2d.globalCompositeOperation = "source-over";
       ctx2d.imageSmoothingEnabled = true;
       ctx2d.imageSmoothingQuality = "high";
+      ctx2d.filter = "blur(18px)";
       ctx2d.drawImage(off, 0, 0, W, H);
+      ctx2d.filter = "none";
     };
 
     gsap.ticker.add(draw);
@@ -240,7 +242,7 @@ export default function Hero() {
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="relative min-h-screen flex flex-col justify-between pt-32 md:pt-40 pb-16 md:pb-24"
+      className="relative overflow-hidden min-h-screen flex flex-col justify-between pt-32 md:pt-40 pb-16 md:pb-24"
     >
       {/* Layer 1 — background image (CSS, position absolute) */}
       <div
@@ -258,8 +260,7 @@ export default function Hero() {
       <canvas
         ref={canvasRef}
         aria-hidden="true"
-        className="absolute inset-0 z-10 pointer-events-none"
-        style={{ width: "100%", height: "100%" }}
+        className="absolute inset-0 z-10 pointer-events-none w-full h-full"
       />
 
       {/* Layer 3 — text content (unchanged JSX) */}
