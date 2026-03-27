@@ -27,7 +27,6 @@ export default function Hero() {
     const canvas = canvasRef.current!;
     const container = containerRef.current!;
 
-    // Keep canvas pixel dimensions in sync with container
     const ro = new ResizeObserver(() => {
       canvas.width = container.offsetWidth;
       canvas.height = container.offsetHeight;
@@ -36,91 +35,76 @@ export default function Hero() {
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
 
-    // 5 organic flowing curves — each has 5 control points
-    // bx/by: base normalised position (0–1); ay: y-amplitude; fy: frequency rad/s; py: phase
-    const curves: Array<Array<{ bx: number; by: number; ay: number; fy: number; py: number }>> = [
-      [
-        { bx: 0.00, by: 0.12, ay: 0.05, fy: 0.20, py: 0.0  },
-        { bx: 0.28, by: 0.06, ay: 0.07, fy: 0.17, py: 1.4  },
-        { bx: 0.52, by: 0.18, ay: 0.06, fy: 0.22, py: 2.8  },
-        { bx: 0.76, by: 0.10, ay: 0.05, fy: 0.18, py: 0.9  },
-        { bx: 1.00, by: 0.15, ay: 0.07, fy: 0.15, py: 3.5  },
-      ],
-      [
-        { bx: 0.00, by: 0.32, ay: 0.06, fy: 0.18, py: 0.7  },
-        { bx: 0.30, by: 0.42, ay: 0.08, fy: 0.23, py: 2.1  },
-        { bx: 0.55, by: 0.28, ay: 0.07, fy: 0.16, py: 1.5  },
-        { bx: 0.78, by: 0.44, ay: 0.06, fy: 0.21, py: 3.8  },
-        { bx: 1.00, by: 0.35, ay: 0.08, fy: 0.19, py: 0.3  },
-      ],
-      [
-        { bx: 0.00, by: 0.54, ay: 0.07, fy: 0.15, py: 2.0  },
-        { bx: 0.25, by: 0.62, ay: 0.09, fy: 0.21, py: 0.5  },
-        { bx: 0.50, by: 0.47, ay: 0.08, fy: 0.18, py: 3.1  },
-        { bx: 0.75, by: 0.60, ay: 0.07, fy: 0.24, py: 1.8  },
-        { bx: 1.00, by: 0.52, ay: 0.06, fy: 0.16, py: 4.2  },
-      ],
-      [
-        { bx: 0.00, by: 0.74, ay: 0.06, fy: 0.22, py: 1.2  },
-        { bx: 0.32, by: 0.66, ay: 0.08, fy: 0.16, py: 3.4  },
-        { bx: 0.58, by: 0.80, ay: 0.07, fy: 0.20, py: 0.6  },
-        { bx: 0.80, by: 0.70, ay: 0.09, fy: 0.17, py: 2.5  },
-        { bx: 1.00, by: 0.76, ay: 0.06, fy: 0.23, py: 1.0  },
-      ],
-      [
-        { bx: 0.00, by: 0.90, ay: 0.05, fy: 0.17, py: 3.0  },
-        { bx: 0.35, by: 0.96, ay: 0.06, fy: 0.22, py: 0.8  },
-        { bx: 0.60, by: 0.86, ay: 0.07, fy: 0.19, py: 2.3  },
-        { bx: 0.82, by: 0.94, ay: 0.05, fy: 0.15, py: 4.0  },
-        { bx: 1.00, by: 0.91, ay: 0.06, fy: 0.20, py: 1.6  },
-      ],
+    // 5 closed organic blobs — cx/cy: centre (normalised); r: radius (fraction of H); n: points
+    const blobDefs: Array<{ cx: number; cy: number; r: number; n: number }> = [
+      { cx: 0.68, cy: 0.42, r: 0.28, n: 8 }, // main right blob
+      { cx: 0.18, cy: 0.28, r: 0.22, n: 7 }, // upper-left
+      { cx: 0.62, cy: 0.78, r: 0.30, n: 8 }, // lower-center-right
+      { cx: 0.85, cy: 0.18, r: 0.16, n: 6 }, // small upper-right
+      { cx: 0.28, cy: 0.74, r: 0.24, n: 7 }, // lower-left
     ];
 
-    // Draw Catmull-Rom spline via cubic bezier approximation
-    const drawSpline = (
+    // Per-point animation params — all deterministic, no Math.random
+    const blobs = blobDefs.map((def, bi) =>
+      Array.from({ length: def.n }, (_, i) => ({
+        baseAngle: (2 * Math.PI * i) / def.n + bi * 0.38,
+        baseR:     1.0 + 0.28 * Math.sin(i * 2.3 + bi * 1.7), // ±28% radius jitter
+        fr:        0.14 + bi * 0.03 + i * 0.015,  // radial osc. freq (rad/s)
+        fa:        0.09 + bi * 0.025 + i * 0.011, // angular osc. freq (rad/s)
+        pr:        (bi * 1.3 + i * 0.9) % (2 * Math.PI), // radial phase
+        pa:        (bi * 0.7 + i * 1.4) % (2 * Math.PI), // angular phase
+        ar:        0.09, // radial amplitude (fraction of blob radius)
+        aa:        0.07, // angular amplitude (radians)
+      }))
+    );
+
+    // Closed Catmull-Rom spline via cubic bezier (wraps end→start)
+    const drawClosed = (
       ctx: CanvasRenderingContext2D,
       pts: Array<{ x: number; y: number }>
     ) => {
+      const n = pts.length;
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
-      for (let i = 0; i < pts.length - 1; i++) {
-        const p0 = pts[Math.max(0, i - 1)];
+      for (let i = 0; i < n; i++) {
+        const p0 = pts[(i - 1 + n) % n];
         const p1 = pts[i];
-        const p2 = pts[i + 1];
-        const p3 = pts[Math.min(pts.length - 1, i + 2)];
-        // Catmull-Rom → cubic bezier control points
-        const cp1x = p1.x + (p2.x - p0.x) / 6;
-        const cp1y = p1.y + (p2.y - p0.y) / 6;
-        const cp2x = p2.x - (p3.x - p1.x) / 6;
-        const cp2y = p2.y - (p3.y - p1.y) / 6;
-        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+        const p2 = pts[(i + 1) % n];
+        const p3 = pts[(i + 2) % n];
+        ctx.bezierCurveTo(
+          p1.x + (p2.x - p0.x) / 6, p1.y + (p2.y - p0.y) / 6,
+          p2.x - (p3.x - p1.x) / 6, p2.y - (p3.y - p1.y) / 6,
+          p2.x, p2.y
+        );
       }
       ctx.stroke();
     };
 
-    // Draw callback — registered on GSAP ticker
+    // Mouse attraction params — lines are pulled toward cursor
+    const ATTRACT_RADIUS = 280;   // px — influence zone
+    const ATTRACT_STRENGTH = 50;  // px — max displacement
+
     const draw = (time: number) => {
       const W = canvas.width;
       const H = canvas.height;
       if (W === 0 || H === 0) return;
 
       const ctx2d = canvas.getContext("2d")!;
-
-      // ── Compositing ───────────────────────────────────────────────────────
       ctx2d.clearRect(0, 0, W, H);
 
-      // Step 1: Solid black mask — hides the CSS image layer below
+      // Step 1: Black mask
       ctx2d.globalCompositeOperation = "source-over";
       ctx2d.fillStyle = "#0A0A09";
       ctx2d.fillRect(0, 0, W, H);
 
-      // Step 2: Lerp cursor toward target
+      // Step 2: Lerp cursor
       const lerpFactor = 0.072;
       curPos.current.x += (tgtPos.current.x - curPos.current.x) * lerpFactor;
       curPos.current.y += (tgtPos.current.y - curPos.current.y) * lerpFactor;
 
-      // Step 3: destination-out reveal — erases black where cursor is
-      if (tgtPos.current.x > -1000) {
+      // Step 3: Cursor reveal (destination-out)
+      const cursorActive = tgtPos.current.x > -1000;
+      if (cursorActive) {
         const cx = curPos.current.x;
         const cy = curPos.current.y;
         const grad = ctx2d.createRadialGradient(cx, cy, 0, cx, cy, 300);
@@ -133,21 +117,40 @@ export default function Hero() {
         ctx2d.fillRect(0, 0, W, H);
       }
 
-      // Step 4: Organic splines — thin white lines over everything
+      // Step 4: Organic closed blobs with mouse attraction
       ctx2d.globalCompositeOperation = "source-over";
       ctx2d.strokeStyle = "rgba(255,255,255,0.28)";
       ctx2d.lineWidth = 1;
       ctx2d.lineCap = "round";
       ctx2d.lineJoin = "round";
 
-      const t = time; // seconds, from GSAP ticker
-      for (const curveDef of curves) {
-        const pts = curveDef.map((p) => ({
-          x: p.bx * W,
-          y: (p.by + p.ay * Math.sin(t * p.fy + p.py)) * H,
-        }));
-        drawSpline(ctx2d, pts);
-      }
+      const t = time;
+      const mx = curPos.current.x;
+      const my = curPos.current.y;
+
+      blobDefs.forEach((def, bi) => {
+        const pts = blobs[bi].map((p) => {
+          // Animated polar → cartesian
+          const angle = p.baseAngle + p.aa * Math.sin(t * p.fa + p.pa);
+          const rad   = def.r * H * p.baseR * (1 + p.ar * Math.sin(t * p.fr + p.pr));
+          let x = def.cx * W + Math.cos(angle) * rad;
+          let y = def.cy * H + Math.sin(angle) * rad;
+
+          // Attract control points toward cursor
+          if (cursorActive) {
+            const dx = mx - x;
+            const dy = my - y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < ATTRACT_RADIUS && dist > 0) {
+              const force = ATTRACT_STRENGTH * Math.pow(1 - dist / ATTRACT_RADIUS, 2);
+              x += (dx / dist) * force;
+              y += (dy / dist) * force;
+            }
+          }
+          return { x, y };
+        });
+        drawClosed(ctx2d, pts);
+      });
     };
 
     gsap.ticker.add(draw);
