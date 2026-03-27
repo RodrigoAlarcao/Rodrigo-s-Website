@@ -28,11 +28,23 @@ const items = [
 export default function WhatIDo() {
   const sectionRef = useRef<HTMLElement>(null);
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
+  const dividerRef = useRef<HTMLDivElement>(null);
 
   useIsomorphicLayoutEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
+      gsap.from(dividerRef.current, {
+        scaleX: 0,
+        transformOrigin: "left",
+        duration: 0.9,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%",
+        },
+      });
+
       gsap.from(itemsRef.current.filter(Boolean), {
         y: 60,
         opacity: 0,
@@ -58,7 +70,7 @@ export default function WhatIDo() {
           <p className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
             O que faço
           </p>
-          <div className="flex-1 border-t border-border" />
+          <div ref={dividerRef} className="flex-1 border-t border-border" />
         </div>
 
         {/* Três blocos — grid com separadores verticais */}
@@ -66,18 +78,19 @@ export default function WhatIDo() {
           {items.map((item, i) => (
             <div
               key={item.title}
-              ref={(el) => {
-                itemsRef.current[i] = el;
-              }}
-              className="py-10 md:py-0 md:px-10 first:md:pl-0 last:md:pr-0 flex flex-col gap-6"
+              ref={(el) => { itemsRef.current[i] = el; }}
+              className="group py-10 md:py-0 md:px-10 first:md:pl-0 last:md:pr-0 flex flex-col gap-6"
             >
               <span className="font-mono text-label text-dim">
                 {item.number}
               </span>
-              <h3 className="font-display font-bold text-text text-[2rem] leading-[1.1] tracking-tight">
-                {item.title}
+              <h3 className="font-display font-bold text-text text-[2rem] leading-[1.1] tracking-tight transition-colors duration-300 group-hover:text-accent">
+                <span className="relative inline-block transition-transform duration-300 group-hover:-translate-y-0.5">
+                  {item.title}
+                  <span className="absolute -bottom-2 left-0 h-[2px] w-0 bg-accent transition-all duration-500 ease-out group-hover:w-full" />
+                </span>
               </h3>
-              <p className="font-body font-light text-dim leading-[1.75]">
+              <p className="font-body font-light text-dim leading-[1.75] transition-colors duration-500 group-hover:text-text">
                 {item.body}
               </p>
             </div>
