@@ -60,11 +60,11 @@ export default function Hero() {
       if (W === 0 || H === 0) return;
 
       const ctx2d = canvas.getContext("2d")!;
-      const SCALE = 8;
+      const SCALE = 4; // 1/4 resolution — better quality for thin lines
       const ow = Math.ceil(W / SCALE);
       const oh = Math.ceil(H / SCALE);
 
-      // ── Voronoi on offscreen canvas (1/8 resolution) ──────────────────────
+      // ── Voronoi on offscreen canvas (1/4 resolution) ──────────────────────
       if (!offscreenRef.current) {
         offscreenRef.current = document.createElement("canvas");
       }
@@ -82,7 +82,9 @@ export default function Hero() {
         y: (s.by + 0.04 * Math.sin(t * s.fy + s.py)) * oh,
       }));
 
-      // Per-pixel Voronoi: find nearest (d1) and second-nearest (d2) distances
+      // Per-pixel Voronoi: distance to cell boundary for thin-line rendering
+      // distToBoundary ≈ (dist2nd - distNearest) / 2 — pixels to the nearest edge
+      const LINE_HALF = 0.55; // offscreen pixels → ~2px at full res after 4× upscale
       for (let py = 0; py < oh; py++) {
         for (let px = 0; px < ow; px++) {
           let d1 = Infinity;
@@ -98,17 +100,16 @@ export default function Hero() {
               d2 = d;
             }
           }
-          const ratio = Math.sqrt(d1 / d2);
+          const distToBoundary = (Math.sqrt(d2) - Math.sqrt(d1)) * 0.5;
           const idx = (py * ow + px) * 4;
-          if (ratio >= 0.62) {
-            // Wider border region — warm beige, smooth fade, blur will soften further
-            const alpha = ((ratio - 0.62) / 0.38) * 200;
-            data[idx] = 232;     // R
-            data[idx + 1] = 213; // G
-            data[idx + 2] = 176; // B
+          if (distToBoundary < LINE_HALF) {
+            // White at 60% max opacity, fades to 0 at line edge
+            const alpha = (1 - distToBoundary / LINE_HALF) * 153;
+            data[idx] = 255;
+            data[idx + 1] = 255;
+            data[idx + 2] = 255;
             data[idx + 3] = alpha;
           } else {
-            // Cell interior — transparent
             data[idx + 3] = 0;
           }
         }
@@ -142,11 +143,11 @@ export default function Hero() {
         ctx2d.fillRect(0, 0, W, H);
       }
 
-      // Step 4: Voronoi borders — soft blur gives Worley-noise glow effect
+      // Step 4: Voronoi — thin white lines, minimal blur to smooth 4× upscale
       ctx2d.globalCompositeOperation = "source-over";
       ctx2d.imageSmoothingEnabled = true;
       ctx2d.imageSmoothingQuality = "high";
-      ctx2d.filter = "blur(18px)";
+      ctx2d.filter = "blur(1.5px)";
       ctx2d.drawImage(off, 0, 0, W, H);
       ctx2d.filter = "none";
     };
@@ -264,7 +265,7 @@ export default function Hero() {
       />
 
       {/* Layer 3 — text content (unchanged JSX) */}
-      <div className="container-site relative z-20 flex flex-col gap-16 md:gap-0 md:justify-between md:h-full md:flex-1">
+      <div className="w-full container-site relative z-20 flex flex-col gap-16 md:gap-0 md:justify-between md:h-full md:flex-1">
 
         {/* Nome — sempre duas linhas, oversized, editorial */}
         <h1
