@@ -16,6 +16,8 @@ export default function Hero() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const tgtPos = useRef({ x: -9999, y: -9999 });
   const curPos = useRef({ x: -9999, y: -9999 });
+  const isHovering = useRef(false); // true while cursor is inside the hero
+  const fadeVal = useRef(0);        // 0–1, lerped for smooth enter/leave
 
   // ── Canvas setup ─────────────────────────────────────────────────────────────
   useIsomorphicLayoutEffect(() => {
@@ -114,14 +116,16 @@ export default function Hero() {
       ctx.fillStyle = "#0A0A09";
       ctx.fillRect(0, 0, W, H);
 
-      // Step 2: Lerp cursor
+      // Step 2: Lerp cursor position + fade value
       curPos.current.x += (tgtPos.current.x - curPos.current.x) * 0.072;
       curPos.current.y += (tgtPos.current.y - curPos.current.y) * 0.072;
+      // fadeVal → 1 on hover, → 0 on leave (0.055 ≈ ~0.8s fade)
+      fadeVal.current += ((isHovering.current ? 1 : 0) - fadeVal.current) * 0.055;
 
       // Step 3: Cursor reveal — halftone dot grid (destination-out)
       // Each dot punches a hole through the mask; dot radius ∝ proximity to cursor.
       // Produces a geometric halftone pattern instead of a plain circle.
-      const cursorActive = tgtPos.current.x > -1000;
+      const cursorActive = fadeVal.current > 0.01;
       if (cursorActive) {
         const cx = curPos.current.x, cy = curPos.current.y;
 
@@ -143,7 +147,7 @@ export default function Hero() {
             const t = 1 - dist / ZONE;
             // Smoothstep gives a crisper centre, softer fade at edge
             const ss = t * t * (3 - 2 * t);
-            const r  = MAX_R * ss;
+            const r  = MAX_R * ss * fadeVal.current;
             if (r < 0.6) continue;
             ctx.beginPath();
             ctx.arc(dx, dy, r, 0, Math.PI * 2);
@@ -176,10 +180,10 @@ export default function Hero() {
             val += m.A * Math.exp(-(dx * dx + dy * dy) / (2 * r2));
           }
 
-          // Cursor depression — local minimum pulls nearby contours inward
+          // Cursor depression — local minimum pulls nearby contours inward (fades with reveal)
           if (cursorActive) {
             const dx = px - mx, dy = py - my;
-            val -= 0.40 * Math.exp(-(dx * dx + dy * dy) / (2 * CURSOR_R * CURSOR_R));
+            val -= 0.40 * fadeVal.current * Math.exp(-(dx * dx + dy * dy) / (2 * CURSOR_R * CURSOR_R));
           }
 
           hField[gy * (GW + 1) + gx] = val;
@@ -232,10 +236,12 @@ export default function Hero() {
   const handleMouseMove = (e: MouseEvent<HTMLElement>) => {
     const rect = containerRef.current!.getBoundingClientRect();
     tgtPos.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    isHovering.current = true;
   };
 
   const handleMouseLeave = () => {
-    tgtPos.current = { x: -9999, y: -9999 };
+    isHovering.current = false;
+    // tgtPos intentionally NOT reset — curPos stays at last position while fading out
   };
 
   // ── GSAP entrance timeline (unchanged) ───────────────────────────────────────
