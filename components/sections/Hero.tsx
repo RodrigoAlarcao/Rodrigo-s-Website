@@ -37,6 +37,10 @@ export default function Hero() {
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
 
+    // Preload wireframe image — drawn on canvas as the "always-visible" base layer
+    const bgFront = new Image();
+    bgFront.src = "/images/hero-bg-front.jpg";
+
     // ── Marching squares iso-contour approach ────────────────────────────────
     // Contour lines of a continuous scalar field NEVER cross each other.
     // Height field h(x,y) = sum of Gaussian "hills". Marching squares extracts
@@ -111,10 +115,15 @@ export default function Hero() {
       const ctx = canvas.getContext("2d")!;
       ctx.clearRect(0, 0, W, H);
 
-      // Step 1: Black mask
+      // Step 1: Wireframe base layer (replaces solid black)
+      // Falls back to dark fill while image is loading on first frame
       ctx.globalCompositeOperation = "source-over";
-      ctx.fillStyle = "#0A0A09";
-      ctx.fillRect(0, 0, W, H);
+      if (bgFront.complete && bgFront.naturalWidth > 0) {
+        ctx.drawImage(bgFront, 0, 0, W, H);
+      } else {
+        ctx.fillStyle = "#0A0A09";
+        ctx.fillRect(0, 0, W, H);
+      }
 
       // Step 2: Lerp cursor position + fade value
       curPos.current.x += (tgtPos.current.x - curPos.current.x) * 0.072;
