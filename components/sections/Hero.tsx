@@ -125,9 +125,9 @@ export default function Hero() {
       if (cursorActive) {
         const cx = curPos.current.x, cy = curPos.current.y;
 
-        const DOT_SPACING = 26;   // px between dot centres
-        const MAX_R       = 11;   // px — max dot radius (at cursor)
-        const ZONE        = 320;  // px — outer edge of influence
+        const DOT_SPACING = 30;   // px between dot centres
+        const MAX_R       = 14;   // px — dots nearly touching at cursor (gap ~2px)
+        const ZONE        = 380;  // px — outer edge of influence
 
         ctx.globalCompositeOperation = "destination-out";
         ctx.fillStyle = "rgba(0,0,0,1)";
