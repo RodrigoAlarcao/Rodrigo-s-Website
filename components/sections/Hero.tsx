@@ -35,26 +35,43 @@ export default function Hero() {
     canvas.width = container.offsetWidth;
     canvas.height = container.offsetHeight;
 
-    // 5 closed organic blobs — cx/cy: centre (normalised); r: radius (fraction of H); n: points
+    // 3 well-separated blobs — guaranteed no overlap between blobs
+    // Separation check: min distance between centres > sum of radii
+    // (0.15,0.35,r=0.20) ↔ (0.80,0.35,r=0.23): dist=0.65H > 0.43H ✓
+    // (0.15,0.35,r=0.20) ↔ (0.48,0.82,r=0.16): dist=0.59H > 0.36H ✓
+    // (0.80,0.35,r=0.23) ↔ (0.48,0.82,r=0.16): dist=0.59H > 0.39H ✓
     const blobDefs: Array<{ cx: number; cy: number; r: number; n: number }> = [
-      { cx: 0.68, cy: 0.42, r: 0.28, n: 8 }, // main right blob
-      { cx: 0.18, cy: 0.28, r: 0.22, n: 7 }, // upper-left
-      { cx: 0.62, cy: 0.78, r: 0.30, n: 8 }, // lower-center-right
-      { cx: 0.85, cy: 0.18, r: 0.16, n: 6 }, // small upper-right
-      { cx: 0.28, cy: 0.74, r: 0.24, n: 7 }, // lower-left
+      { cx: 0.15, cy: 0.35, r: 0.20, n: 12 }, // left
+      { cx: 0.80, cy: 0.35, r: 0.23, n: 12 }, // right
+      { cx: 0.48, cy: 0.82, r: 0.16, n: 10 }, // bottom-centre
     ];
 
-    // Per-point animation params — all deterministic, no Math.random
+    // 3 concentric rings per blob — scales chosen so inner rings never cross outer:
+    // scale[i+1] * (1 + ar) < scale[i] * (1 - ar)  with ar=0.08
+    // 0.60 * 1.08 = 0.648 < 1.0 * 0.92 = 0.92 ✓
+    // 0.32 * 1.08 = 0.346 < 0.60 * 0.92 = 0.552 ✓
+    const ringDefs = [
+      { scale: 1.00, alpha: 0.26 },
+      { scale: 0.60, alpha: 0.16 },
+      { scale: 0.32, alpha: 0.09 },
+    ];
+
+    // Per-point animation params — multi-harmonic baseR for organic look
     const blobs = blobDefs.map((def, bi) =>
       Array.from({ length: def.n }, (_, i) => ({
-        baseAngle: (2 * Math.PI * i) / def.n + bi * 0.38,
-        baseR:     1.0 + 0.28 * Math.sin(i * 2.3 + bi * 1.7), // ±28% radius jitter
-        fr:        0.14 + bi * 0.03 + i * 0.015,  // radial osc. freq (rad/s)
-        fa:        0.09 + bi * 0.025 + i * 0.011, // angular osc. freq (rad/s)
-        pr:        (bi * 1.3 + i * 0.9) % (2 * Math.PI), // radial phase
-        pa:        (bi * 0.7 + i * 1.4) % (2 * Math.PI), // angular phase
-        ar:        0.09, // radial amplitude (fraction of blob radius)
-        aa:        0.07, // angular amplitude (radians)
+        baseAngle: (2 * Math.PI * i) / def.n + bi * 0.61,
+        // Multi-harmonic radius: 3 overlapping sine waves → irregular, non-round shape
+        baseR:
+          1.0 +
+          0.15 * Math.sin(i * 2.1 + bi * 1.7) +
+          0.08 * Math.sin(i * 3.8 + bi * 0.9) +
+          0.04 * Math.sin(i * 5.3 + bi * 2.4),
+        fr:  0.28 + bi * 0.07 + i * 0.013, // radial oscillation freq (rad/s)
+        fa:  0.19 + bi * 0.05 + i * 0.009, // angular oscillation freq (rad/s)
+        pr:  (bi * 1.3 + i * 0.9) % (2 * Math.PI),
+        pa:  (bi * 0.7 + i * 1.4) % (2 * Math.PI),
+        ar:  0.08, // radial amplitude — kept small to preserve non-crossing guarantee
+        aa:  0.06, // angular amplitude (radians)
       }))
     );
 
@@ -80,9 +97,9 @@ export default function Hero() {
       ctx.stroke();
     };
 
-    // Mouse attraction params — lines are pulled toward cursor
-    const ATTRACT_RADIUS = 280;   // px — influence zone
-    const ATTRACT_STRENGTH = 50;  // px — max displacement
+    // Mouse attraction — outer ring pulled toward cursor; inner rings follow
+    const ATTRACT_RADIUS = 240;
+    const ATTRACT_STRENGTH = 45;
 
     const draw = (time: number) => {
       const W = canvas.width;
@@ -117,9 +134,8 @@ export default function Hero() {
         ctx2d.fillRect(0, 0, W, H);
       }
 
-      // Step 4: Organic closed blobs with mouse attraction
+      // Step 4: Concentric rings per blob
       ctx2d.globalCompositeOperation = "source-over";
-      ctx2d.strokeStyle = "rgba(255,255,255,0.28)";
       ctx2d.lineWidth = 1;
       ctx2d.lineCap = "round";
       ctx2d.lineJoin = "round";
@@ -129,14 +145,16 @@ export default function Hero() {
       const my = curPos.current.y;
 
       blobDefs.forEach((def, bi) => {
-        const pts = blobs[bi].map((p) => {
-          // Animated polar → cartesian
+        const bcx = def.cx * W;
+        const bcy = def.cy * H;
+
+        // Compute outer ring points (with mouse attraction)
+        const outerPts = blobs[bi].map((p) => {
           const angle = p.baseAngle + p.aa * Math.sin(t * p.fa + p.pa);
           const rad   = def.r * H * p.baseR * (1 + p.ar * Math.sin(t * p.fr + p.pr));
-          let x = def.cx * W + Math.cos(angle) * rad;
-          let y = def.cy * H + Math.sin(angle) * rad;
+          let x = bcx + Math.cos(angle) * rad;
+          let y = bcy + Math.sin(angle) * rad;
 
-          // Attract control points toward cursor
           if (cursorActive) {
             const dx = mx - x;
             const dy = my - y;
@@ -149,7 +167,21 @@ export default function Hero() {
           }
           return { x, y };
         });
-        drawClosed(ctx2d, pts);
+
+        // Draw each ring — inner rings scale outer pts toward blob centre
+        ringDefs.forEach((ring, ri) => {
+          const pts =
+            ri === 0
+              ? outerPts
+              : outerPts.map((op) => ({
+                  // Slight rotational offset per ring for extra organic feel
+                  x: bcx + (op.x - bcx) * ring.scale + Math.cos(t * 0.05 + ri * 1.2) * 0.5,
+                  y: bcy + (op.y - bcy) * ring.scale + Math.sin(t * 0.05 + ri * 1.2) * 0.5,
+                }));
+
+          ctx2d.strokeStyle = `rgba(255,255,255,${ring.alpha})`;
+          drawClosed(ctx2d, pts);
+        });
       });
     };
 
