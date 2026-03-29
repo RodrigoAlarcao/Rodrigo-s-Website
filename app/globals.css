@@ -34,7 +34,6 @@ html {
 
 body {
   background: linear-gradient(to bottom, #000000, var(--color-bg));
-  background-attachment: fixed;
   color: var(--color-text);
   font-family: var(--font-body);
   font-weight: 300;

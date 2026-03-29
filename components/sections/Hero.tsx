@@ -409,7 +409,7 @@ export default function Hero() {
       {/* Layer 1b — bottom gradient: fades hero into site bg colour (#0A0A09) */}
       <div
         aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-48 z-10 pointer-events-none"
+        className="absolute inset-x-0 bottom-0 h-64 z-[15] pointer-events-none"
         style={{
           background: "linear-gradient(to bottom, transparent, #000000)",
         }}
