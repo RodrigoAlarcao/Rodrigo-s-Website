@@ -411,7 +411,7 @@ export default function Hero() {
         aria-hidden="true"
         className="absolute inset-x-0 bottom-0 h-48 z-10 pointer-events-none"
         style={{
-          background: "linear-gradient(to bottom, transparent, #0A0A09)",
+          background: "linear-gradient(to bottom, transparent, #000000)",
         }}
       />
 
