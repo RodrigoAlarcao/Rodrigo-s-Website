@@ -8,8 +8,9 @@ import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
-const TEXT =
-  "Sou designer há 7 anos e builder desde que percebi que ter a ideia e saber como fica não chegava. Aprendi a usar inteligência artificial como extensão do processo: para pensar com mais clareza, estruturar com mais rigor e executar sem perder qualidade. Criei uma forma de trabalhar que me permite ir de conceito a produto real em semanas. O que me distingue não é a velocidade. É a combinação de saber o que construir, como vai parecer, e ser capaz de o fazer.";
+const A = ({ children }: { children: React.ReactNode }) => (
+  <span style={{ color: "var(--color-accent)" }}>{children}</span>
+);
 
 export default function AboutStatement() {
   const textRef = useRef<HTMLParagraphElement>(null);
@@ -56,13 +57,20 @@ export default function AboutStatement() {
       <div className="container-site py-32 md:py-40">
         <p
           ref={textRef}
-          className="font-display font-medium leading-[1.6] max-w-[900px] mx-auto text-center"
+          className="font-display font-bold leading-[1.35] max-w-[860px]"
           style={{
             fontSize: "clamp(1.4rem, 2.8vw, 2.2rem)",
             color: "var(--color-text)",
           }}
         >
-          {TEXT}
+          Sou designer há <A>7 anos</A> e builder desde que percebi que ter a
+          ideia e saber como fica não chegava. Aprendi a usar{" "}
+          <A>inteligência artificial</A> como extensão do processo: para pensar
+          com mais clareza, estruturar com mais rigor e executar sem perder
+          qualidade. Criei uma forma de trabalhar que me permite ir de conceito
+          a <A>produto real em semanas</A>. O que me distingue{" "}
+          <A>não é a velocidade</A>. É a combinação de saber o que construir,
+          como vai parecer, e ser capaz de o fazer.
         </p>
       </div>
     </section>
