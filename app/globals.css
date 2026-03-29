@@ -132,3 +132,44 @@ body::before {
     cursor: none !important;
   }
 }
+
+/* ─── Form Input Animated Border ────────────────────────────────── */
+/* Replaces static border-b with a two-layer draw-in effect on focus */
+.input-wrapper {
+  position: relative;
+}
+
+/* Base underline — always visible */
+.input-wrapper::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* Accent underline — draws in from left on focus */
+.input-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-wrapper:focus-within::after {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input-wrapper::after {
+    transition: none;
+  }
+}

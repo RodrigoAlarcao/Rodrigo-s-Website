@@ -25,6 +25,21 @@ const items = [
   },
 ];
 
+function scrambleNumber(el: HTMLElement, final: string) {
+  let frame = 0;
+  const total = 14;
+  const tick = () => {
+    frame++;
+    if (frame < total) {
+      el.textContent = String(Math.floor(Math.random() * 99)).padStart(2, "0");
+      setTimeout(tick, 35);
+    } else {
+      el.textContent = final;
+    }
+  };
+  tick();
+}
+
 export default function Methodology() {
   const sectionRef = useRef<HTMLElement>(null);
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -34,6 +49,7 @@ export default function Methodology() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
+      // ── Entrance ─────────────────────────────────────────────────────────────
       gsap.from(dividerRef.current, {
         scaleX: 0,
         transformOrigin: "left",
@@ -56,6 +72,49 @@ export default function Methodology() {
           start: "top 75%",
         },
       });
+
+      // ── Number scramble on enter ──────────────────────────────────────────────
+      ScrollTrigger.create({
+        trigger: sectionRef.current,
+        start: "top 75%",
+        onEnter: () => {
+          itemsRef.current.filter(Boolean).forEach((item, i) => {
+            const numEl = item?.querySelector("[data-number]") as HTMLElement | null;
+            if (!numEl) return;
+            const final = numEl.dataset.number ?? "";
+            setTimeout(() => scrambleNumber(numEl, final), i * 150);
+          });
+        },
+      });
+
+      // ── Exit (scrub as section scrolls past viewport top) ────────────────────
+      const exitTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: 1,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      exitTl
+        .to(dividerRef.current, {
+          scaleX: 0,
+          transformOrigin: "right",
+          opacity: 0,
+          ease: "none",
+        })
+        .to(
+          itemsRef.current.filter(Boolean),
+          {
+            y: -40,
+            opacity: 0,
+            stagger: { each: 0.04, from: "start" },
+            ease: "none",
+          },
+          "<"
+        );
     }, sectionRef);
 
     return () => ctx.revert();
@@ -81,7 +140,10 @@ export default function Methodology() {
               ref={(el) => { itemsRef.current[i] = el; }}
               className="group py-10 md:py-0 md:px-10 first:md:pl-0 last:md:pr-0 flex flex-col gap-6"
             >
-              <span className="font-mono text-label text-dim">
+              <span
+                data-number={item.number}
+                className="font-mono text-label text-dim"
+              >
                 {item.number}
               </span>
               {/* Title with expanding underline */}

@@ -5,9 +5,12 @@ import gsap from "gsap";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
 import { useMagnetic } from "@/hooks/useMagnetic";
 
+const CTA_TEXT = "Fala comigo";
+
 export default function Nav() {
   const navRef = useRef<HTMLElement>(null);
   const ctaRef = useRef<HTMLAnchorElement>(null);
+  const ctaLettersRef = useRef<HTMLSpanElement>(null);
   const [scrolled, setScrolled] = useState(false);
 
   // Frosted glass on scroll
@@ -37,6 +40,30 @@ export default function Nav() {
   // Magnetic CTA
   useMagnetic(ctaRef, 0.4);
 
+  const handleCtaEnter = () => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const letters = ctaLettersRef.current?.querySelectorAll("span");
+    if (!letters || letters.length === 0) return;
+    gsap.fromTo(
+      letters,
+      { y: 0 },
+      {
+        y: -4,
+        stagger: 0.025,
+        duration: 0.18,
+        ease: "power2.out",
+        overwrite: true,
+        onComplete: () =>
+          gsap.to(letters, {
+            y: 0,
+            stagger: 0.02,
+            duration: 0.4,
+            ease: "elastic.out(1, 0.45)",
+          }),
+      }
+    );
+  };
+
   return (
     <header
       ref={navRef}
@@ -57,9 +84,16 @@ export default function Nav() {
         <a
           ref={ctaRef}
           href="#contacto"
+          onMouseEnter={handleCtaEnter}
           className="font-mono text-label uppercase tracking-[0.12em] text-dim hover:text-accent transition-colors duration-300"
         >
-          Fala comigo
+          <span ref={ctaLettersRef} className="inline-flex">
+            {CTA_TEXT.split("").map((char, i) => (
+              <span key={i} className="inline-block">
+                {char === " " ? "\u00A0" : char}
+              </span>
+            ))}
+          </span>
         </a>
       </div>
     </header>
