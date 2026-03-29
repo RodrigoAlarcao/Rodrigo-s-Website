@@ -44,12 +44,25 @@ export default function Methodology() {
   const sectionRef = useRef<HTMLElement>(null);
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
   const dividerRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLParagraphElement>(null);
 
   useIsomorphicLayoutEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
       // ── Entrance ─────────────────────────────────────────────────────────────
+      gsap.from(labelRef.current, {
+        y: 16,
+        opacity: 0,
+        duration: 0.7,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%",
+          toggleActions: "play none none reverse",
+        },
+      });
+
       gsap.from(dividerRef.current, {
         scaleX: 0,
         transformOrigin: "left",
@@ -58,19 +71,21 @@ export default function Methodology() {
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top 80%",
+          toggleActions: "play none none reverse",
         },
       });
 
       gsap.from(itemsRef.current.filter(Boolean), {
-        y: 60,
+        y: 80,
         opacity: 0,
-        scale: 0.82,
-        duration: 1.0,
-        ease: "power3.out",
+        scale: 0.78,
+        duration: 1.1,
+        ease: "back.out(1.3)",
         stagger: 0.15,
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top 75%",
+          toggleActions: "play none none reverse",
         },
       });
 
@@ -128,7 +143,7 @@ export default function Methodology() {
 
         {/* Label de secção */}
         <div className="flex items-center gap-6 mb-16 md:mb-20">
-          <p className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
+          <p ref={labelRef} className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
             Como trabalho
           </p>
           <div ref={dividerRef} className="flex-1 border-t border-border" />
