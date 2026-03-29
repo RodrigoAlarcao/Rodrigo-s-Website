@@ -147,7 +147,7 @@ export default function Hero() {
       const cursorActive = fadeVal.current > 0.01;
       if (cursorActive) {
         const cx = curPos.current.x, cy = curPos.current.y;
-        const BLOB_R  = 300; // base radius (px)
+        const BLOB_R  = 150; // base radius (px)
         const N       = 14;  // control points — more = smoother undulation
 
         // Organic shape: two low-frequency harmonics on the radius, animated by time

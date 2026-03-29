@@ -57,7 +57,7 @@ export default function AboutStatement() {
       <div className="container-site py-32 md:py-40">
         <p
           ref={textRef}
-          className="font-display font-bold leading-[1.15] max-w-[860px]"
+          className="font-display font-bold leading-[1.15] w-full"
           style={{
             fontSize: "clamp(1.75rem, 3.5vw, 2.8rem)",
             color: "var(--color-text)",
