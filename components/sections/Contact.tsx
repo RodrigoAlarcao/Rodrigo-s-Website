@@ -73,7 +73,7 @@ export default function Contact() {
       exitTl
         .to(dividerRef.current, {
           scaleX: 0,
-          transformOrigin: "right",
+          transformOrigin: "left",
           opacity: 0,
           ease: "none",
         })
@@ -82,7 +82,7 @@ export default function Contact() {
           {
             y: -40,
             opacity: 0,
-            stagger: { each: 0.04, from: "start" },
+            stagger: { each: 0.06, from: "start" },
             ease: "none",
           },
           "<"

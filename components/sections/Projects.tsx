@@ -86,34 +86,6 @@ export default function Projects() {
         scrollTrigger: { trigger: sectionRef.current, start: "top 75%" },
       });
 
-      // ── Exit (scrub as section scrolls past viewport top) ────────────────────
-      const exitTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top top",
-          end: "bottom top",
-          scrub: 1,
-          invalidateOnRefresh: true,
-        },
-      });
-
-      exitTl
-        .to(dividerRef.current, {
-          scaleX: 0,
-          transformOrigin: "right",
-          opacity: 0,
-          ease: "none",
-        })
-        .to(
-          rowsRef.current.filter(Boolean),
-          {
-            y: -40,
-            opacity: 0,
-            stagger: { each: 0.04, from: "start" },
-            ease: "none",
-          },
-          "<"
-        );
     }, sectionRef);
 
     return () => ctx.revert();

@@ -64,7 +64,8 @@ export default function WhatIDo() {
       gsap.from(itemsRef.current.filter(Boolean), {
         y: 60,
         opacity: 0,
-        duration: 0.8,
+        scale: 0.82,
+        duration: 1.0,
         ease: "power3.out",
         stagger: 0.15,
         scrollTrigger: {
@@ -101,7 +102,7 @@ export default function WhatIDo() {
       exitTl
         .to(dividerRef.current, {
           scaleX: 0,
-          transformOrigin: "right",
+          transformOrigin: "left",
           opacity: 0,
           ease: "none",
         })
@@ -110,7 +111,8 @@ export default function WhatIDo() {
           {
             y: -40,
             opacity: 0,
-            stagger: { each: 0.04, from: "start" },
+            scale: 0.78,
+            stagger: { each: 0.08, from: "start" },
             ease: "none",
           },
           "<"
