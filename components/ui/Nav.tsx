@@ -68,8 +68,10 @@ export default function Nav() {
   return (
     <header
       ref={navRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled ? "bg-bg/80 backdrop-blur-md border-b border-border" : ""
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 backdrop-blur-md ${
+        scrolled
+          ? "bg-black/60 border-b border-white/10 shadow-[0_1px_24px_rgba(0,0,0,0.6)]"
+          : "bg-black/20 border-b border-white/5"
       }`}
     >
       <div className="container-site flex items-center justify-between py-6 md:py-8">
@@ -86,7 +88,7 @@ export default function Nav() {
           ref={ctaRef}
           href="#contacto"
           onMouseEnter={handleCtaEnter}
-          className="font-mono text-label uppercase tracking-[0.12em] text-dim hover:text-accent transition-colors duration-300"
+          className="font-mono text-label uppercase tracking-[0.12em] text-accent border border-accent/40 px-4 py-1.5 rounded-full hover:bg-accent/10 hover:border-accent transition-all duration-300"
         >
           <span ref={ctaLettersRef} className="inline-flex">
             {CTA_TEXT.split("").map((char, i) => (

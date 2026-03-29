@@ -108,9 +108,12 @@ export default function WhatIDo() {
         .to(
           itemsRef.current.filter(Boolean),
           {
-            y: -40,
+            y: -70,
             opacity: 0,
-            stagger: { each: 0.04, from: "start" },
+            rotateX: 10,
+            scale: 0.92,
+            transformPerspective: 700,
+            stagger: { each: 0.05, from: "start" },
             ease: "none",
           },
           "<"
