@@ -228,9 +228,15 @@ export default function Hero() {
       for (let li = 0; li < N_LEVELS; li++) {
         const lv = LEVELS[li];
         // Outer contours slightly brighter; inner contours near-invisible
-        const alpha = 0.17 - li * 0.005;
+        const alpha = 0.22 - li * 0.005;
         if (alpha <= 0) continue;
-        ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+        // Fiber-optic pulse: accent (#ECC15B) → white, phase-offset per level
+        // so the "light" appears to travel across the contour field over time
+        const phase = (Math.sin(t * 0.5 + li * 0.35) + 1) / 2; // 0 → 1
+        const r = Math.round(236 + (255 - 236) * phase);
+        const g = Math.round(193 + (255 - 193) * phase);
+        const b = Math.round(91  + (255 - 91)  * phase);
+        ctx.strokeStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
         ctx.beginPath();
 
         for (let gy = 0; gy < GH; gy++) {
