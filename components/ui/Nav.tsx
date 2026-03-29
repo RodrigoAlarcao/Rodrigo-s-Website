@@ -53,13 +53,14 @@ export default function Nav() {
         duration: 0.18,
         ease: "power2.out",
         overwrite: true,
-        onComplete: () =>
+        onComplete: () => {
           gsap.to(letters, {
             y: 0,
             stagger: 0.02,
             duration: 0.4,
             ease: "elastic.out(1, 0.45)",
-          }),
+          });
+        },
       }
     );
   };
