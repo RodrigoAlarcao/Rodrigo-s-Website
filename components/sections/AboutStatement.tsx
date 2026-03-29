@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import React, { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
+import type { AboutSegment } from "@/lib/content";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -12,7 +13,7 @@ const A = ({ children }: { children: React.ReactNode }) => (
   <span className="font-normal italic" style={{ color: "var(--color-accent)" }}>{children}</span>
 );
 
-export default function AboutStatement() {
+export default function AboutStatement({ content }: { content: AboutSegment[] }) {
   const textRef = useRef<HTMLParagraphElement>(null);
 
   useIsomorphicLayoutEffect(() => {
@@ -63,11 +64,11 @@ export default function AboutStatement() {
             color: "var(--color-text)",
           }}
         >
-          Sou designer há <A>7 anos</A>. Desenvolvi um processo de trabalho com
-          inteligência artificial que me permite ir de{" "}
-          <A>conceito a produto em semanas</A>, sem perder qualidade nem
-          identidade. O que me distingue <A>não é a velocidade</A>, é conseguir
-          fazer os três: pensar o produto, desenhar a experiência, e construir.
+          {content.map((seg, i) =>
+            seg.accent
+              ? <React.Fragment key={i}><A>{seg.text}</A></React.Fragment>
+              : <span key={i}>{seg.text}</span>
+          )}
         </p>
       </div>
     </section>

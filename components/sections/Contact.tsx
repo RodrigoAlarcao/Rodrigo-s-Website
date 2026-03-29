@@ -6,12 +6,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
-import { contactSchema, type ContactFormData } from "@/lib/validations";
+import { createContactSchema, type ContactFormData } from "@/lib/validations";
 import { sendContact } from "@/lib/actions";
+import type { ContactContent } from "@/lib/content";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function Contact() {
+export default function Contact({ content }: { content: ContactContent }) {
+  const contactSchema = createContactSchema(content.validation);
   const sectionRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const dividerRef = useRef<HTMLDivElement>(null);
@@ -102,11 +104,11 @@ export default function Contact() {
         reset();
       } else {
         setStatus("error");
-        setErrorMsg(result.error ?? "Algo correu mal. Tenta novamente.");
+        setErrorMsg(result.error ?? content.errorGeneric);
       }
     } catch {
       setStatus("error");
-      setErrorMsg("Erro de ligação. Tenta novamente.");
+      setErrorMsg(content.errorNetwork);
     }
   };
 
@@ -114,13 +116,13 @@ export default function Contact() {
     "w-full bg-transparent border-0 py-4 font-body font-light text-text placeholder:text-dim outline-none resize-none";
 
   return (
-    <section ref={sectionRef} id="contacto">
+    <section ref={sectionRef} id={content.sectionId}>
       <div className="container-site py-24 md:py-32">
 
         {/* Label de secção */}
         <div className="flex items-center gap-6 mb-16 md:mb-20">
           <p className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
-            Contacto
+            {content.sectionLabel}
           </p>
           <div ref={dividerRef} className="flex-1 border-t border-border" />
         </div>
@@ -130,15 +132,15 @@ export default function Contact() {
           {/* Esquerda — título */}
           <div className="flex flex-col gap-4">
             <h2 data-animate className="font-display font-bold text-text leading-[1.05] tracking-tight text-[clamp(2.5rem,5vw,4rem)]">
-              Tens um projecto
+              {content.headingLine1}
               <br />
-              em mente?
+              {content.headingLine2}
             </h2>
             <p data-animate className="text-hero-tagline font-body font-light italic text-dim leading-[1.4]">
-              Fala comigo.
+              {content.sub}
             </p>
             <p data-animate className="font-body font-light text-dim leading-[1.75] mt-4 max-w-sm">
-              Ou escreve directamente para{" "}
+              {content.orWriteTo}{" "}
               <a
                 href="mailto:alarcao.rodrigo@gmail.com"
                 className="text-text hover:text-accent transition-colors duration-300"
@@ -153,10 +155,10 @@ export default function Contact() {
             {status === "success" ? (
               <div className="flex flex-col gap-4 py-8">
                 <p className="font-display font-bold text-text text-[1.5rem]">
-                  Mensagem enviada.
+                  {content.successHeading}
                 </p>
                 <p className="font-body font-light text-dim leading-[1.75]">
-                  Respondo em breve.
+                  {content.successBody}
                 </p>
               </div>
             ) : (
@@ -168,7 +170,7 @@ export default function Contact() {
                     <input
                       {...register("name")}
                       type="text"
-                      placeholder="Nome"
+                      placeholder={content.namePlaceholder}
                       className={inputClass}
                       disabled={status === "loading"}
                     />
@@ -184,7 +186,7 @@ export default function Contact() {
                     <input
                       {...register("email")}
                       type="email"
-                      placeholder="Email"
+                      placeholder={content.emailPlaceholder}
                       className={inputClass}
                       disabled={status === "loading"}
                     />
@@ -199,7 +201,7 @@ export default function Contact() {
                   <div className="input-wrapper">
                     <textarea
                       {...register("message")}
-                      placeholder="Mensagem"
+                      placeholder={content.messagePlaceholder}
                       rows={4}
                       className={inputClass}
                       disabled={status === "loading"}
@@ -222,7 +224,7 @@ export default function Contact() {
                     disabled={status === "loading"}
                     className="group flex items-center gap-2 font-display font-medium text-[1.125rem] text-text hover:text-accent transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <span>{status === "loading" ? "A enviar..." : "Enviar"}</span>
+                    <span>{status === "loading" ? content.sendingButton : content.sendButton}</span>
                     {status !== "loading" && (
                       <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">
                         →

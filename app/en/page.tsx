@@ -6,18 +6,18 @@ import Projects from "@/components/sections/Projects";
 import Methodology from "@/components/sections/Methodology";
 import Contact from "@/components/sections/Contact";
 import Footer from "@/components/sections/Footer";
-import { ptContent } from "@/lib/content";
+import { enContent } from "@/lib/content";
 
-export default function Home() {
+export default function HomeEn() {
   return (
     <main>
-      <Nav content={ptContent.nav} />
-      <Hero content={ptContent.hero} />
-      <AboutStatement content={ptContent.about} />
-      <WhatIDo content={ptContent.whatIDo} />
-      <Projects content={ptContent.projects} />
-      <Methodology content={ptContent.methodology} />
-      <Contact content={ptContent.contact} />
+      <Nav content={enContent.nav} />
+      <Hero content={enContent.hero} />
+      <AboutStatement content={enContent.about} />
+      <WhatIDo content={enContent.whatIDo} />
+      <Projects content={enContent.projects} />
+      <Methodology content={enContent.methodology} />
+      <Contact content={enContent.contact} />
       <Footer />
     </main>
   );

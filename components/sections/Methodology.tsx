@@ -4,26 +4,9 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
+import type { SectionGroup } from "@/lib/content";
 
 gsap.registerPlugin(ScrollTrigger);
-
-const items = [
-  {
-    number: "01",
-    title: "Product Design first",
-    body: "Começo pelo utilizador, não pela tecnologia. Antes de escrever uma linha de código, percebo o problema, os fluxos e o que realmente precisa de existir.",
-  },
-  {
-    number: "02",
-    title: "AI como alavanca",
-    body: "Claude Code, Cursor, vibe coding. Não como atalho — como alavanca. A AI amplifica a intenção de design, não a substitui.",
-  },
-  {
-    number: "03",
-    title: "MVP em semanas",
-    body: "Da ideia ao live em dias. Já o fiz três vezes. O ritmo não compromete a qualidade — obriga a focar no que é essencial.",
-  },
-];
 
 function scrambleNumber(el: HTMLElement, final: string) {
   let frame = 0;
@@ -40,7 +23,8 @@ function scrambleNumber(el: HTMLElement, final: string) {
   tick();
 }
 
-export default function Methodology() {
+export default function Methodology({ content }: { content: SectionGroup }) {
+  const items = content.items;
   const sectionRef = useRef<HTMLElement>(null);
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
   const dividerRef = useRef<HTMLDivElement>(null);
@@ -138,13 +122,13 @@ export default function Methodology() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="metodologia">
+    <section ref={sectionRef} id={content.sectionId}>
       <div className="container-site py-24 md:py-32">
 
         {/* Label de secção */}
         <div className="flex items-center gap-6 mb-16 md:mb-20">
           <p ref={labelRef} className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
-            Como trabalho
+            {content.sectionLabel}
           </p>
           <div ref={dividerRef} className="flex-1 border-t border-border" />
         </div>

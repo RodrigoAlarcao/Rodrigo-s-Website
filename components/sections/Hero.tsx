@@ -4,10 +4,11 @@ import { useRef, type MouseEvent } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
+import type { HeroContent } from "@/lib/content";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function Hero() {
+export default function Hero({ content }: { content: HeroContent }) {
   // ── Layer 3: text refs (unchanged) ──────────────────────────────────────────
   const containerRef = useRef<HTMLElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
@@ -228,7 +229,7 @@ export default function Hero() {
       for (let li = 0; li < N_LEVELS; li++) {
         const lv = LEVELS[li];
         // Outer contours slightly brighter; inner contours near-invisible
-        const alpha = 0.22 - li * 0.005;
+        const alpha = 0.38 - li * 0.007;
         if (alpha <= 0) continue;
         // Fiber-optic pulse: accent (#ECC15B) → white, phase-offset per level
         // so the "light" appears to travel across the contour field over time
@@ -504,20 +505,20 @@ export default function Hero() {
               className="font-body text-text max-w-[480px] leading-[1.5] text-[1rem] md:text-[1.0625rem]"
             >
               <span className="block font-semibold">
-                Projeto, estruturo e construo produtos digitais
+                {content.tagline}
               </span>
               <span className="block font-light italic mt-1">
-                Da ideia ao MVP, em semanas.
+                {content.taglineSub}
               </span>
             </p>
 
             {/* CTA — confiante, sem implorar atenção */}
             <a
               ref={ctaRef}
-              href="#contacto"
+              href={content.ctaHref}
               className="font-display font-medium text-[1.125rem] text-text hover:text-accent transition-colors duration-300 whitespace-nowrap group flex items-center gap-2"
             >
-              Fala comigo
+              {content.cta}
               <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">
                 →
               </span>
