@@ -68,10 +68,10 @@ export default function Nav() {
   return (
     <header
       ref={navRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 backdrop-blur-md ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 backdrop-blur-lg bg-black/70 ${
         scrolled
-          ? "bg-black/70 border-b border-white/10 shadow-[0_1px_24px_rgba(0,0,0,0.6)]"
-          : "bg-black/50 border-b border-white/8"
+          ? "border-b border-white/10 shadow-[0_1px_24px_rgba(0,0,0,0.6)]"
+          : "border-b border-white/5"
       }`}
     >
       <div className="container-site flex items-center justify-between py-6 md:py-8">
