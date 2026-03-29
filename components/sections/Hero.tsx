@@ -42,7 +42,7 @@ export default function Hero() {
 
     // Preload wireframe image — drawn on canvas as the "always-visible" base layer
     const bgFront = new Image();
-    bgFront.src = "/images/hero-bg-front.png";
+    bgFront.src = "/images/hero-bg-front3.jpg";
 
     // ── Marching squares iso-contour approach ────────────────────────────────
     // Contour lines of a continuous scalar field NEVER cross each other.
@@ -399,7 +399,7 @@ export default function Hero() {
         aria-hidden="true"
         className="absolute inset-0"
         style={{
-          backgroundImage: "url('/images/hero-bg.png')",
+          backgroundImage: "url('/images/hero-bg7.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
