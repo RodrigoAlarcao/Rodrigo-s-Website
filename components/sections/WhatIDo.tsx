@@ -102,7 +102,7 @@ export default function WhatIDo() {
       exitTl
         .to(dividerRef.current, {
           scaleX: 0,
-          transformOrigin: "right",
+          transformOrigin: "left",
           opacity: 0,
           ease: "none",
         })

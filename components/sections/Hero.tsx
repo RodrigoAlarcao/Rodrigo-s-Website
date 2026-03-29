@@ -15,12 +15,16 @@ export default function Hero() {
   const taglineRef = useRef<HTMLParagraphElement>(null);
   const ctaRef = useRef<HTMLAnchorElement>(null);
 
+  // ── Layer 1: background image ref (parallax) ────────────────────────────────
+  const bgImageRef = useRef<HTMLDivElement>(null);
+
   // ── Layer 2: canvas refs ─────────────────────────────────────────────────────
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const tgtPos = useRef({ x: -9999, y: -9999 });
   const curPos = useRef({ x: -9999, y: -9999 });
   const isHovering = useRef(false); // true while cursor is inside the hero
   const fadeVal = useRef(0);        // 0–1, lerped for smooth enter/leave
+  const scrollOffsetRef = useRef(0); // 0–1, hero scroll progress for canvas parallax
 
   // ── Canvas setup ─────────────────────────────────────────────────────────────
   useIsomorphicLayoutEffect(() => {
@@ -122,7 +126,9 @@ export default function Hero() {
       // Falls back to dark fill while image is loading on first frame
       ctx.globalCompositeOperation = "source-over";
       if (bgFront.complete && bgFront.naturalWidth > 0) {
-        ctx.drawImage(bgFront, 0, 0, W, H);
+        // Parallax: front image moves slightly slower than the section scroll
+        const parallaxY = scrollOffsetRef.current * H * 0.12;
+        ctx.drawImage(bgFront, 0, parallaxY, W, H - parallaxY);
       } else {
         ctx.fillStyle = "#0A0A09";
         ctx.fillRect(0, 0, W, H);
@@ -335,6 +341,29 @@ export default function Hero() {
           "-=0.5"
         );
 
+      // Background image parallax — moves at 25% of scroll speed, recedes into depth
+      gsap.to(bgImageRef.current, {
+        y: "25%",
+        ease: "none",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      // Canvas front-image parallax — feeds scrollOffsetRef used in draw()
+      ScrollTrigger.create({
+        trigger: containerRef.current,
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+        invalidateOnRefresh: true,
+        onUpdate: (self) => { scrollOffsetRef.current = self.progress; },
+      });
+
       // Divider scroll-out: fromTo is explicit about both start and end states,
       // so scrub reversal always restores scaleX:1 / opacity:1 correctly.
       // Starts at 30% scroll (after name is well visible) → fully gone at hero bottom.
@@ -344,7 +373,7 @@ export default function Hero() {
         {
           scaleX: 0,
           opacity: 0,
-          transformOrigin: "right",
+          transformOrigin: "left",
           ease: "none",
           scrollTrigger: {
             trigger: containerRef.current,
@@ -359,10 +388,11 @@ export default function Hero() {
       // Text parallax exit — fromTo so scrub reversal always restores correctly
       gsap.fromTo(
         [taglineRef.current, ctaRef.current],
-        { y: 0, opacity: 1 },
+        { y: 0, opacity: 1, scale: 1 },
         {
           y: -50,
           opacity: 0,
+          scale: 0.88,
           ease: "none",
           scrollTrigger: {
             trigger: containerRef.current,
@@ -376,10 +406,11 @@ export default function Hero() {
 
       gsap.fromTo(
         nameRef.current,
-        { y: 0, opacity: 1 },
+        { y: 0, opacity: 1, scale: 1 },
         {
           y: -30,
           opacity: 0,
+          scale: 0.92,
           ease: "none",
           scrollTrigger: {
             trigger: containerRef.current,
@@ -404,6 +435,7 @@ export default function Hero() {
     >
       {/* Layer 1 — background image (CSS, position absolute) */}
       <div
+        ref={bgImageRef}
         aria-hidden="true"
         className="absolute inset-0"
         style={{
