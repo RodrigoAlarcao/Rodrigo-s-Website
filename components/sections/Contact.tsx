@@ -31,6 +31,7 @@ export default function Contact() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
+      // ── Entrance ─────────────────────────────────────────────────────────────
       gsap.from(dividerRef.current, {
         scaleX: 0,
         transformOrigin: "left",
@@ -56,6 +57,36 @@ export default function Contact() {
           },
         });
       }
+
+      // ── Exit (scrub as section scrolls past viewport top) ────────────────────
+      const exitEls = contentRef.current?.querySelectorAll("[data-animate]");
+      const exitTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: 1,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      exitTl
+        .to(dividerRef.current, {
+          scaleX: 0,
+          transformOrigin: "right",
+          opacity: 0,
+          ease: "none",
+        })
+        .to(
+          exitEls ? Array.from(exitEls) : [],
+          {
+            y: -40,
+            opacity: 0,
+            stagger: { each: 0.04, from: "start" },
+            ease: "none",
+          },
+          "<"
+        );
     }, sectionRef);
 
     return () => ctx.revert();
@@ -80,7 +111,7 @@ export default function Contact() {
   };
 
   const inputClass =
-    "w-full bg-transparent border-0 border-b border-border py-4 font-body font-light text-text placeholder:text-dim outline-none focus:border-accent transition-colors duration-300 resize-none";
+    "w-full bg-transparent border-0 py-4 font-body font-light text-text placeholder:text-dim outline-none resize-none";
 
   return (
     <section ref={sectionRef} id="contacto">
@@ -133,13 +164,15 @@ export default function Contact() {
 
                 {/* Nome */}
                 <div className="flex flex-col gap-1">
-                  <input
-                    {...register("name")}
-                    type="text"
-                    placeholder="Nome"
-                    className={inputClass}
-                    disabled={status === "loading"}
-                  />
+                  <div className="input-wrapper">
+                    <input
+                      {...register("name")}
+                      type="text"
+                      placeholder="Nome"
+                      className={inputClass}
+                      disabled={status === "loading"}
+                    />
+                  </div>
                   {errors.name && (
                     <p className="font-mono text-label text-accent">{errors.name.message}</p>
                   )}
@@ -147,13 +180,15 @@ export default function Contact() {
 
                 {/* Email */}
                 <div className="flex flex-col gap-1">
-                  <input
-                    {...register("email")}
-                    type="email"
-                    placeholder="Email"
-                    className={inputClass}
-                    disabled={status === "loading"}
-                  />
+                  <div className="input-wrapper">
+                    <input
+                      {...register("email")}
+                      type="email"
+                      placeholder="Email"
+                      className={inputClass}
+                      disabled={status === "loading"}
+                    />
+                  </div>
                   {errors.email && (
                     <p className="font-mono text-label text-accent">{errors.email.message}</p>
                   )}
@@ -161,13 +196,15 @@ export default function Contact() {
 
                 {/* Mensagem */}
                 <div className="flex flex-col gap-1">
-                  <textarea
-                    {...register("message")}
-                    placeholder="Mensagem"
-                    rows={4}
-                    className={inputClass}
-                    disabled={status === "loading"}
-                  />
+                  <div className="input-wrapper">
+                    <textarea
+                      {...register("message")}
+                      placeholder="Mensagem"
+                      rows={4}
+                      className={inputClass}
+                      disabled={status === "loading"}
+                    />
+                  </div>
                   {errors.message && (
                     <p className="font-mono text-label text-accent">{errors.message.message}</p>
                   )}

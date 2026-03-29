@@ -68,6 +68,7 @@ export default function Projects() {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
+      // ── Entrance ─────────────────────────────────────────────────────────────
       gsap.from(dividerRef.current, {
         scaleX: 0,
         transformOrigin: "left",
@@ -84,6 +85,35 @@ export default function Projects() {
         stagger: 0.1,
         scrollTrigger: { trigger: sectionRef.current, start: "top 75%" },
       });
+
+      // ── Exit (scrub as section scrolls past viewport top) ────────────────────
+      const exitTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: 1,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      exitTl
+        .to(dividerRef.current, {
+          scaleX: 0,
+          transformOrigin: "right",
+          opacity: 0,
+          ease: "none",
+        })
+        .to(
+          rowsRef.current.filter(Boolean),
+          {
+            y: -40,
+            opacity: 0,
+            stagger: { each: 0.04, from: "start" },
+            ease: "none",
+          },
+          "<"
+        );
     }, sectionRef);
 
     return () => ctx.revert();
@@ -102,7 +132,18 @@ export default function Projects() {
     if (!isOpen) {
       const el = detailRefs.current[i];
       const icon = iconRefs.current[i];
-      if (el) gsap.to(el, { height: "auto", opacity: 1, duration: 0.5, ease: "power3.out", overwrite: true });
+      if (el) {
+        gsap.to(el, { height: "auto", opacity: 1, duration: 0.5, ease: "power3.out", overwrite: true });
+        const innerEls = el.querySelectorAll("[data-detail-item]");
+        gsap.from(innerEls, {
+          y: 18,
+          opacity: 0,
+          stagger: 0.07,
+          duration: 0.45,
+          ease: "power2.out",
+          delay: 0.2,
+        });
+      }
       if (icon) gsap.to(icon, { rotate: 45, duration: 0.3, ease: "power2.out" });
     }
 
@@ -193,12 +234,12 @@ export default function Projects() {
                 <div className="pb-12 flex flex-col gap-10">
 
                   {/* Screenshot placeholder */}
-                  <div className="w-full aspect-video bg-surface border border-border rounded-sm flex items-center justify-center">
+                  <div data-detail-item className="w-full aspect-video bg-surface border border-border rounded-sm flex items-center justify-center">
                     <span className="font-mono text-label text-dim">Screenshot em breve</span>
                   </div>
 
                   {/* 3 colunas de detalhe */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
+                  <div data-detail-item className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
                     <div className="flex flex-col gap-3">
                       <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">O que fiz</h4>
                       <p className="font-body font-light text-text leading-[1.75]">{project.detail.whatIDid}</p>
@@ -222,6 +263,7 @@ export default function Projects() {
 
                   {/* CTA dentro da gaveta */}
                   <a
+                    data-detail-item
                     href={project.url}
                     target="_blank"
                     rel="noopener noreferrer"
