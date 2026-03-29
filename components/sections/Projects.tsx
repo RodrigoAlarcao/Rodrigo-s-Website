@@ -4,55 +4,12 @@ import { useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
+import type { ProjectsUI, Project } from "@/lib/content";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const projects = [
-  {
-    number: "01",
-    name: "EcoReport",
-    description: "Plataforma de inteligência ambiental. Transforma reports de cidadãos em dados acionáveis para municípios — hotspots, padrões, relatórios mensais. Primeiro projecto de vibe coding, 2 anos de iteração.",
-    tags: ["Product Design", "Cursor AI", "Dados Cívicos"],
-    url: "https://ecoreport.pt",
-    urlLabel: "ecoreport.pt",
-    detail: {
-      whatIDid: "Plataforma que acumula observações de cidadãos, identifica hotspots de poluição e gera relatórios mensais com recomendações para municípios. Uma queixa é ruído — cem reports do mesmo local ao longo de três meses são evidência impossível de ignorar.",
-      whyIDid: "Os sistemas de queixas existentes transformam cidadãos em reclamadores perpétuos sem impacto real. A oportunidade era transformar indignação individual em inteligência colectiva — dados que municípios não têm capacidade de produzir sozinhos.",
-      process: "Primeiro projecto de vibe coding — 2 anos antes do Claude Code existir. UX explorado no Figma. Desenvolvimento com Cursor AI. Backend por um developer externo. Aprendi o que são alucinações de AI, como as mitigar, e a importância crítica de documentar e planear antes de desenvolver com AI.",
-      tools: ["Cursor AI", "Figma", "Supabase"],
-    },
-  },
-  {
-    number: "02",
-    name: "Palco Democrático",
-    description: "Plataforma de sondagem democrática em tempo real. Anonimato por encriptação, integridade por AI anti-bots. 100% a solo em 10 dias com Claude Code.",
-    tags: ["Product Design", "Claude Code", "Democracia Digital"],
-    url: "https://palcodemocratico.pt",
-    urlLabel: "palcodemocratico.pt",
-    detail: {
-      whatIDid: "Plataforma onde cidadãos votam em questões políticas de forma anónima — privacidade garantida por encriptação end-to-end, integridade por AI de detecção de bots. Alternativa ao modelo de sondagens telefónicas do século XX.",
-      whyIDid: "Em 2026, medir a vontade de um país com 300 chamadas telefónicas não é apenas ineficiente — é antidemocrático. Temos a tecnologia para capturar opinião real em tempo real. A maioria nunca foi ouvida. O silêncio foi assumido como indiferença.",
-      process: "100% a solo em 10 dias com Claude Code. Product design primeiro — 5 pilares definidos antes de escrever uma linha de código. Supabase para backend, Cloudflare para infraestrutura.",
-      tools: ["Claude Code", "Supabase", "Cloudflare", "Vercel"],
-    },
-  },
-  {
-    number: "03",
-    name: "LONA",
-    description: "Liga marcas a artistas para criar obras permanentes com impacto real. Animações avançadas GSAP + Framer Motion. Metodologia pessoal com documentos estruturados. 1 semana.",
-    tags: ["Product Design", "Claude Code", "GSAP · Framer Motion"],
-    url: "https://lona-kt9z38xp0-rodrigos-projects-578d09b9.vercel.app",
-    urlLabel: "lona.vercel.app",
-    detail: {
-      whatIDid: "Marketplace que liga marcas a artistas para criar obras permanentes em espaços físicos. Dois produtos: LONA Street (arte urbana) e LONA Install (instalações interiores). Roster de artistas, processo de matching marca-artista, gestão de projecto.",
-      whyIDid: "O marketing tradicional não deixa marca. Uma campanha digital dura dias — uma obra de arte permanente dura décadas. Arte e marketing não são opostos. São aliados naturais que nunca ninguém teve coragem de unir a sério.",
-      process: "O projecto tecnicamente mais ambicioso. Animações avançadas com GSAP e Framer Motion. Construído com Claude Code usando uma metodologia pessoal baseada em documentos estruturados — o que permite escalar e iterar rapidamente sem perder coerência. De conceito a produto live em 1 semana.",
-      tools: ["Claude Code", "GSAP", "Framer Motion", "Vercel"],
-    },
-  },
-];
-
-export default function Projects() {
+export default function Projects({ content }: { content: { ui: ProjectsUI; items: Project[] } }) {
+  const { ui, items: projects } = content;
   const sectionRef = useRef<HTMLElement>(null);
   const rowsRef = useRef<(HTMLDivElement | null)[]>([]);
   const detailRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -123,13 +80,13 @@ export default function Projects() {
   };
 
   return (
-    <section ref={sectionRef} id="projetos">
+    <section ref={sectionRef} id={ui.sectionId}>
       <div className="container-site py-24 md:py-32">
 
         {/* Label de secção */}
         <div className="flex items-center gap-6 mb-16 md:mb-20">
           <p className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
-            Projetos
+            {ui.sectionLabel}
           </p>
           <div ref={dividerRef} className="flex-1 border-t border-border" />
         </div>
@@ -178,7 +135,7 @@ export default function Projects() {
                   className="flex-1 flex items-center justify-between py-5 pr-8 border-r border-border group/link hover:text-accent transition-colors duration-300"
                 >
                   <span className="font-display font-medium text-[1.25rem] text-text group-hover/link:text-accent transition-colors duration-300">
-                    Ver projecto
+                    {ui.viewProject}
                   </span>
                   <span className="text-dim group-hover/link:text-accent group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-all duration-300 inline-block">
                     ↗
@@ -190,7 +147,7 @@ export default function Projects() {
                   className="flex-1 flex items-center justify-between py-5 pl-8 group/btn hover:text-accent transition-colors duration-300"
                 >
                   <span className="font-display font-medium text-[1.25rem] text-text group-hover/btn:text-accent transition-colors duration-300">
-                    {openIndex === i ? "Fechar" : "Detalhes"}
+                    {openIndex === i ? ui.close : ui.details}
                   </span>
                   <span
                     ref={(el) => { iconRefs.current[i] = el; }}
@@ -207,21 +164,21 @@ export default function Projects() {
 
                   {/* Screenshot placeholder */}
                   <div data-detail-item className="w-full aspect-video bg-surface border border-border rounded-sm flex items-center justify-center">
-                    <span className="font-mono text-label text-dim">Screenshot em breve</span>
+                    <span className="font-mono text-label text-dim">{ui.screenshotSoon}</span>
                   </div>
 
                   {/* 3 colunas de detalhe */}
                   <div data-detail-item className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
                     <div className="flex flex-col gap-3">
-                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">O que fiz</h4>
+                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">{ui.whatIDid}</h4>
                       <p className="font-body font-light text-text leading-[1.75]">{project.detail.whatIDid}</p>
                     </div>
                     <div className="flex flex-col gap-3">
-                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">Porque fiz</h4>
+                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">{ui.whyIDid}</h4>
                       <p className="font-body font-light text-text leading-[1.75]">{project.detail.whyIDid}</p>
                     </div>
                     <div className="flex flex-col gap-3">
-                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">Processo</h4>
+                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">{ui.process}</h4>
                       <p className="font-body font-light text-text leading-[1.75]">{project.detail.process}</p>
                       <div className="flex flex-wrap gap-2 mt-2">
                         {project.detail.tools.map((tool) => (
@@ -242,7 +199,7 @@ export default function Projects() {
                     className="self-start flex items-center gap-6 justify-between border border-border px-8 py-5 min-w-[260px] hover:border-accent hover:bg-white/[0.03] transition-all duration-300 group/cta"
                   >
                     <span className="font-display font-medium text-[1.125rem] text-text group-hover/cta:text-accent transition-colors duration-300">
-                      Ver projecto
+                      {ui.viewProject}
                     </span>
                     <span className="text-dim group-hover/cta:text-accent group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5 transition-all duration-300 inline-block">
                       ↗

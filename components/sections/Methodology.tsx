@@ -4,26 +4,9 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
+import type { SectionGroup } from "@/lib/content";
 
 gsap.registerPlugin(ScrollTrigger);
-
-const items = [
-  {
-    number: "01",
-    title: "Product Design first",
-    body: "Começo pelo utilizador, não pela tecnologia. Antes de escrever uma linha de código, percebo o problema, os fluxos e o que realmente precisa de existir.",
-  },
-  {
-    number: "02",
-    title: "AI como alavanca",
-    body: "Claude Code, Cursor, vibe coding. Não como atalho — como alavanca. A AI amplifica a intenção de design, não a substitui.",
-  },
-  {
-    number: "03",
-    title: "MVP em semanas",
-    body: "Da ideia ao live em dias. Já o fiz três vezes. O ritmo não compromete a qualidade — obriga a focar no que é essencial.",
-  },
-];
 
 function scrambleNumber(el: HTMLElement, final: string) {
   let frame = 0;
@@ -40,16 +23,30 @@ function scrambleNumber(el: HTMLElement, final: string) {
   tick();
 }
 
-export default function Methodology() {
+export default function Methodology({ content }: { content: SectionGroup }) {
+  const items = content.items;
   const sectionRef = useRef<HTMLElement>(null);
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
   const dividerRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLParagraphElement>(null);
 
   useIsomorphicLayoutEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
       // ── Entrance ─────────────────────────────────────────────────────────────
+      gsap.from(labelRef.current, {
+        y: 16,
+        opacity: 0,
+        duration: 0.7,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%",
+          toggleActions: "play none none reverse",
+        },
+      });
+
       gsap.from(dividerRef.current, {
         scaleX: 0,
         transformOrigin: "left",
@@ -58,19 +55,21 @@ export default function Methodology() {
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top 80%",
+          toggleActions: "play none none reverse",
         },
       });
 
       gsap.from(itemsRef.current.filter(Boolean), {
-        y: 60,
+        y: 80,
         opacity: 0,
-        scale: 0.82,
-        duration: 1.0,
-        ease: "power3.out",
+        scale: 0.78,
+        duration: 1.1,
+        ease: "back.out(1.3)",
         stagger: 0.15,
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top 75%",
+          toggleActions: "play none none reverse",
         },
       });
 
@@ -123,13 +122,13 @@ export default function Methodology() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="metodologia">
+    <section ref={sectionRef} id={content.sectionId}>
       <div className="container-site py-24 md:py-32">
 
         {/* Label de secção */}
         <div className="flex items-center gap-6 mb-16 md:mb-20">
-          <p className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
-            Como trabalho
+          <p ref={labelRef} className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
+            {content.sectionLabel}
           </p>
           <div ref={dividerRef} className="flex-1 border-t border-border" />
         </div>

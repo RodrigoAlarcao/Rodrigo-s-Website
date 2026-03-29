@@ -4,18 +4,18 @@ import localFont from "next/font/local";
 import "@fontsource/dm-sans/300.css";
 import "@fontsource/dm-sans/400.css";
 import "@fontsource/ibm-plex-mono/400.css";
-import "./globals.css";
+import "../globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import Cursor from "@/components/ui/Cursor";
 
 // ─── Cabinet Grotesk — Fontshare (local) ────────────────────────────
 const cabinetGrotesk = localFont({
   src: [
-    { path: "../public/fonts/cabinet-grotesk/CabinetGrotesk-Regular.woff2",    weight: "400", style: "normal" },
-    { path: "../public/fonts/cabinet-grotesk/CabinetGrotesk-Medium.woff2",     weight: "500", style: "normal" },
-    { path: "../public/fonts/cabinet-grotesk/CabinetGrotesk-Bold.woff2",       weight: "700", style: "normal" },
-    { path: "../public/fonts/cabinet-grotesk/CabinetGrotesk-Extrabold.woff2",  weight: "800", style: "normal" },
-    { path: "../public/fonts/cabinet-grotesk/CabinetGrotesk-Black.woff2",      weight: "900", style: "normal" },
+    { path: "../../public/fonts/cabinet-grotesk/CabinetGrotesk-Regular.woff2",    weight: "400", style: "normal" },
+    { path: "../../public/fonts/cabinet-grotesk/CabinetGrotesk-Medium.woff2",     weight: "500", style: "normal" },
+    { path: "../../public/fonts/cabinet-grotesk/CabinetGrotesk-Bold.woff2",       weight: "700", style: "normal" },
+    { path: "../../public/fonts/cabinet-grotesk/CabinetGrotesk-Extrabold.woff2",  weight: "800", style: "normal" },
+    { path: "../../public/fonts/cabinet-grotesk/CabinetGrotesk-Black.woff2",      weight: "900", style: "normal" },
   ],
   variable: "--font-display",
   display: "swap",
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default function PtLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

@@ -4,10 +4,10 @@ import { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
 import { useMagnetic } from "@/hooks/useMagnetic";
+import type { NavContent } from "@/lib/content";
 
-const CTA_TEXT = "Fala comigo";
-
-export default function Nav() {
+export default function Nav({ content }: { content: NavContent }) {
+  const CTA_TEXT = content.cta;
   const navRef = useRef<HTMLElement>(null);
   const ctaRef = useRef<HTMLAnchorElement>(null);
   const ctaLettersRef = useRef<HTMLSpanElement>(null);
@@ -77,7 +77,7 @@ export default function Nav() {
       <div className="container-site flex items-center justify-between py-6 md:py-8">
         {/* Logo */}
         <a
-          href="/"
+          href={content.logoHref}
           className="font-display font-bold text-text text-[1.125rem] tracking-tight hover:text-accent transition-colors duration-300"
         >
           RA
@@ -86,7 +86,7 @@ export default function Nav() {
         {/* CTA âncora — magnetic */}
         <a
           ref={ctaRef}
-          href="#contacto"
+          href={content.ctaHref}
           onMouseEnter={handleCtaEnter}
           className="font-mono text-label uppercase tracking-[0.12em] text-accent border border-accent/40 px-4 py-1.5 rounded-full hover:bg-accent/10 hover:border-accent transition-all duration-300"
         >

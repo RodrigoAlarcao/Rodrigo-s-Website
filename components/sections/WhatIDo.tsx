@@ -4,26 +4,9 @@ import { useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
+import type { SectionGroup } from "@/lib/content";
 
 gsap.registerPlugin(ScrollTrigger);
-
-const items = [
-  {
-    number: "01",
-    title: "Penso",
-    body: "Começo pelo problema, não pela solução. Antes de qualquer linha de código ou pixel no Figma, percebo o que está realmente em jogo.",
-  },
-  {
-    number: "02",
-    title: "Estruturo",
-    body: "Transformo ideias cruas em produtos com forma. Tenho uma metodologia própria para isso — desenvolvida ao longo de dois anos com AI.",
-  },
-  {
-    number: "03",
-    title: "Construo",
-    body: "Não fico pelo desenho. Lanço. Já o fiz sozinho. Em semana e meia.",
-  },
-];
 
 function scrambleNumber(el: HTMLElement, final: string) {
   let frame = 0;
@@ -40,16 +23,30 @@ function scrambleNumber(el: HTMLElement, final: string) {
   tick();
 }
 
-export default function WhatIDo() {
+export default function WhatIDo({ content }: { content: SectionGroup }) {
+  const items = content.items;
   const sectionRef = useRef<HTMLElement>(null);
   const itemsRef = useRef<(HTMLDivElement | null)[]>([]);
   const dividerRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLParagraphElement>(null);
 
   useIsomorphicLayoutEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const ctx = gsap.context(() => {
       // ── Entrance ─────────────────────────────────────────────────────────────
+      gsap.from(labelRef.current, {
+        y: 16,
+        opacity: 0,
+        duration: 0.7,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%",
+          toggleActions: "play none none reverse",
+        },
+      });
+
       gsap.from(dividerRef.current, {
         scaleX: 0,
         transformOrigin: "left",
@@ -58,19 +55,21 @@ export default function WhatIDo() {
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top 80%",
+          toggleActions: "play none none reverse",
         },
       });
 
       gsap.from(itemsRef.current.filter(Boolean), {
-        y: 60,
+        y: 80,
         opacity: 0,
-        scale: 0.82,
-        duration: 1.0,
-        ease: "power3.out",
+        scale: 0.78,
+        duration: 1.1,
+        ease: "back.out(1.3)",
         stagger: 0.15,
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top 75%",
+          toggleActions: "play none none reverse",
         },
       });
 
@@ -123,13 +122,13 @@ export default function WhatIDo() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="o-que-faco">
+    <section ref={sectionRef} id={content.sectionId}>
       <div className="container-site py-24 md:py-32">
 
         {/* Label de secção — mono, inline com divider */}
         <div className="flex items-center gap-6 mb-16 md:mb-20">
-          <p className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
-            O que faço
+          <p ref={labelRef} className="font-mono text-label uppercase tracking-[0.12em] text-dim whitespace-nowrap">
+            {content.sectionLabel}
           </p>
           <div ref={dividerRef} className="flex-1 border-t border-border" />
         </div>

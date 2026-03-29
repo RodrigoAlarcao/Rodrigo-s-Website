@@ -4,12 +4,14 @@ import { useRef, type MouseEvent } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
+import type { HeroContent } from "@/lib/content";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function Hero() {
+export default function Hero({ content }: { content: HeroContent }) {
   // ── Layer 3: text refs (unchanged) ──────────────────────────────────────────
   const containerRef = useRef<HTMLElement>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
   const nameRef = useRef<HTMLHeadingElement>(null);
   const dividerRef = useRef<HTMLDivElement>(null);
   const taglineRef = useRef<HTMLParagraphElement>(null);
@@ -146,7 +148,7 @@ export default function Hero() {
       const cursorActive = fadeVal.current > 0.01;
       if (cursorActive) {
         const cx = curPos.current.x, cy = curPos.current.y;
-        const BLOB_R  = 300; // base radius (px)
+        const BLOB_R  = 150; // base radius (px)
         const N       = 14;  // control points — more = smoother undulation
 
         // Organic shape: two low-frequency harmonics on the radius, animated by time
@@ -227,9 +229,15 @@ export default function Hero() {
       for (let li = 0; li < N_LEVELS; li++) {
         const lv = LEVELS[li];
         // Outer contours slightly brighter; inner contours near-invisible
-        const alpha = 0.17 - li * 0.005;
+        const alpha = 0.38 - li * 0.007;
         if (alpha <= 0) continue;
-        ctx.strokeStyle = `rgba(255,255,255,${alpha.toFixed(3)})`;
+        // Fiber-optic pulse: accent (#ECC15B) → white, phase-offset per level
+        // so the "light" appears to travel across the contour field over time
+        const phase = (Math.sin(t * 0.5 + li * 0.35) + 1) / 2; // 0 → 1
+        const r = Math.round(236 + (255 - 236) * phase);
+        const g = Math.round(193 + (255 - 193) * phase);
+        const b = Math.round(91  + (255 - 91)  * phase);
+        ctx.strokeStyle = `rgba(${r},${g},${b},${alpha.toFixed(3)})`;
         ctx.beginPath();
 
         for (let gy = 0; gy < GH; gy++) {
@@ -288,6 +296,7 @@ export default function Hero() {
         // Estado final imediato — sem animação
         gsap.set(
           [
+            labelRef.current,
             nameRef.current,
             dividerRef.current,
             taglineRef.current,
@@ -301,12 +310,14 @@ export default function Hero() {
       // Timeline de entrada — PRD secção 5.1
       const tl = gsap.timeline({ delay: 0.2 });
 
+      tl.from(labelRef.current, { y: -16, opacity: 0, duration: 0.5, ease: "power3.out" })
+
       // Nome: clipPath reveal da esquerda para a direita
-      tl.from(nameRef.current, {
+        .from(nameRef.current, {
         clipPath: "inset(0 100% 0 0)",
         duration: 1.0,
         ease: "power3.inOut",
-      })
+      }, "-=0.2")
         // Separador: scale da esquerda
         .from(
           dividerRef.current,
@@ -405,7 +416,7 @@ export default function Hero() {
       );
 
       gsap.fromTo(
-        nameRef.current,
+        [labelRef.current, nameRef.current],
         { y: 0, opacity: 1, scale: 1 },
         {
           y: -30,
@@ -465,6 +476,11 @@ export default function Hero() {
       {/* Layer 3 — text content (unchanged JSX) */}
       <div className="w-full container-site relative z-20 flex flex-col gap-16 md:gap-0 md:justify-between md:h-full md:flex-1">
 
+        {/* Label acima do nome */}
+        <div ref={labelRef} className="font-mono text-[11px] uppercase tracking-[0.12em] mb-4" style={{ color: 'var(--color-accent)', opacity: 0.7 }}>
+          Design · Build · Launch
+        </div>
+
         {/* Nome — Rodrigo light italic / Alarcão extrabold */}
         <h1
           ref={nameRef}
@@ -479,7 +495,7 @@ export default function Hero() {
           {/* 1px accent divider — PRD secção 2.4 */}
           <div
             ref={dividerRef}
-            className="w-full border-t border-accent mb-10 md:mb-14"
+            className="w-full md:w-1/2 border-t border-accent mb-10 md:mb-14"
           />
 
           {/* Tagline + CTA — editorial: texto à esquerda, CTA à direita */}
@@ -489,20 +505,20 @@ export default function Hero() {
               className="font-body text-text max-w-[480px] leading-[1.5] text-[1rem] md:text-[1.0625rem]"
             >
               <span className="block font-semibold">
-                Projeto, estruturo e construo produtos digitais
+                {content.tagline}
               </span>
               <span className="block font-light italic mt-1">
-                Da ideia ao MVP, em semanas.
+                {content.taglineSub}
               </span>
             </p>
 
             {/* CTA — confiante, sem implorar atenção */}
             <a
               ref={ctaRef}
-              href="#contacto"
+              href={content.ctaHref}
               className="font-display font-medium text-[1.125rem] text-text hover:text-accent transition-colors duration-300 whitespace-nowrap group flex items-center gap-2"
             >
-              Fala comigo
+              {content.cta}
               <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">
                 →
               </span>
