@@ -108,12 +108,10 @@ export default function Methodology() {
         .to(
           itemsRef.current.filter(Boolean),
           {
-            y: -70,
+            y: -24,
             opacity: 0,
-            rotateX: 10,
-            scale: 0.92,
-            transformPerspective: 700,
-            stagger: { each: 0.05, from: "start" },
+            scale: 0.95,
+            stagger: { each: 0.06, from: "start" },
             ease: "none",
           },
           "<"
