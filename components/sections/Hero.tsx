@@ -356,32 +356,40 @@ export default function Hero() {
         }
       );
 
-      // Text parallax exit — content drifts upward as hero scrolls off
-      gsap.to([taglineRef.current, ctaRef.current], {
-        y: -50,
-        opacity: 0,
-        ease: "none",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "20% top",
-          end: "80% top",
-          scrub: 1.2,
-          invalidateOnRefresh: true,
-        },
-      });
+      // Text parallax exit — fromTo so scrub reversal always restores correctly
+      gsap.fromTo(
+        [taglineRef.current, ctaRef.current],
+        { y: 0, opacity: 1 },
+        {
+          y: -50,
+          opacity: 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "20% top",
+            end: "80% top",
+            scrub: 1.2,
+            invalidateOnRefresh: true,
+          },
+        }
+      );
 
-      gsap.to(nameRef.current, {
-        y: -30,
-        opacity: 0,
-        ease: "none",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top top",
-          end: "55% top",
-          scrub: 1.2,
-          invalidateOnRefresh: true,
-        },
-      });
+      gsap.fromTo(
+        nameRef.current,
+        { y: 0, opacity: 1 },
+        {
+          y: -30,
+          opacity: 0,
+          ease: "none",
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top top",
+            end: "55% top",
+            scrub: 1.2,
+            invalidateOnRefresh: true,
+          },
+        }
+      );
     }, containerRef);
 
     return () => ctx.revert();

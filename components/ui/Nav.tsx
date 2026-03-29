@@ -70,8 +70,8 @@ export default function Nav() {
       ref={navRef}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 backdrop-blur-md ${
         scrolled
-          ? "bg-black/60 border-b border-white/10 shadow-[0_1px_24px_rgba(0,0,0,0.6)]"
-          : "bg-black/20 border-b border-white/5"
+          ? "bg-black/70 border-b border-white/10 shadow-[0_1px_24px_rgba(0,0,0,0.6)]"
+          : "bg-black/50 border-b border-white/8"
       }`}
     >
       <div className="container-site flex items-center justify-between py-6 md:py-8">
