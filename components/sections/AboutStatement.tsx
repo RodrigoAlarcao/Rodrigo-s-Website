@@ -9,7 +9,7 @@ import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
 const A = ({ children }: { children: React.ReactNode }) => (
-  <span style={{ color: "var(--color-accent)" }}>{children}</span>
+  <span className="font-normal italic" style={{ color: "var(--color-accent)" }}>{children}</span>
 );
 
 export default function AboutStatement() {
@@ -57,27 +57,17 @@ export default function AboutStatement() {
       <div className="container-site py-32 md:py-40">
         <p
           ref={textRef}
-          className="font-display leading-[1.35] max-w-[860px]"
+          className="font-display font-bold leading-[1.35] max-w-[860px]"
           style={{
-            fontSize: "clamp(1.4rem, 2.8vw, 2.2rem)",
+            fontSize: "clamp(1.75rem, 3.5vw, 2.8rem)",
             color: "var(--color-text)",
           }}
         >
-          <span className="font-normal">
-            Sou designer há <A>7 anos</A> e builder desde que percebi que ter a
-            ideia e saber como fica não chegava.
-          </span>{" "}
-          <span className="font-bold">
-            Criei uma forma de trabalhar que me permite ir de conceito a{" "}
-            <A>produto real em semanas</A>.
-          </span>{" "}
-          <span className="font-normal italic">
-            O que me distingue <A>não é a velocidade</A>.
-          </span>{" "}
-          <span className="font-extrabold">
-            É a combinação de saber o que construir, como vai parecer, e ser
-            capaz de o fazer.
-          </span>
+          Sou designer há <A>7 anos</A> e builder desde que percebi que ter a
+          ideia e saber como fica não chegava. Criei uma forma de trabalhar que
+          me permite ir de conceito a <A>produto real em semanas</A>. O que me
+          distingue <A>não é a velocidade</A>. É a combinação de saber o que
+          construir, como vai parecer, e ser capaz de o fazer.
         </p>
       </div>
     </section>
