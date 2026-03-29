@@ -1,5 +1,6 @@
 import Nav from "@/components/ui/Nav";
 import Hero from "@/components/sections/Hero";
+import AboutStatement from "@/components/sections/AboutStatement";
 import WhatIDo from "@/components/sections/WhatIDo";
 import Projects from "@/components/sections/Projects";
 import Methodology from "@/components/sections/Methodology";
@@ -11,6 +12,7 @@ export default function Home() {
     <main>
       <Nav />
       <Hero />
+      <AboutStatement />
       <WhatIDo />
       <Projects />
       <Methodology />
