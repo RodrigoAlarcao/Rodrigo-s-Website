@@ -63,11 +63,11 @@ export default function AboutStatement() {
             color: "var(--color-text)",
           }}
         >
-          Sou designer há <A>7 anos</A> e builder desde que percebi que ter a
-          ideia e saber como fica não chegava. Criei uma forma de trabalhar que
-          me permite ir de conceito a <A>produto real em semanas</A>. O que me
-          distingue <A>não é a velocidade</A>. É a combinação de saber o que
-          construir, como vai parecer, e ser capaz de o fazer.
+          Sou designer há <A>7 anos</A>. Desenvolvi um processo de trabalho com
+          inteligência artificial que me permite ir de{" "}
+          <A>conceito a produto em semanas</A>, sem perder qualidade nem
+          identidade. O que me distingue <A>não é a velocidade</A>, é conseguir
+          fazer os três: pensar o produto, desenhar a experiência, e construir.
         </p>
       </div>
     </section>
