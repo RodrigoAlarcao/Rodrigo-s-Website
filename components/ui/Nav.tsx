@@ -77,7 +77,7 @@ export default function Nav({ content }: { content: NavContent }) {
       <div className="container-site flex items-center justify-between py-6 md:py-8">
         {/* Logo */}
         <a
-          href="/"
+          href={content.logoHref}
           className="font-display font-bold text-text text-[1.125rem] tracking-tight hover:text-accent transition-colors duration-300"
         >
           RA

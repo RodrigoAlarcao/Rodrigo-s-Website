@@ -5,6 +5,7 @@ import { ptValidation, enValidation, type ValidationMessages } from "./validatio
 export type NavContent = {
   cta: string;
   ctaHref: string;
+  logoHref: string;
 };
 
 export type HeroContent = {
@@ -95,6 +96,7 @@ export const ptContent: SiteContent = {
   nav: {
     cta: "Fala comigo",
     ctaHref: "#contacto",
+    logoHref: "/",
   },
   hero: {
     tagline: "Projeto, estruturo e construo produtos digitais",
@@ -236,6 +238,7 @@ export const enContent: SiteContent = {
   nav: {
     cta: "Talk to me",
     ctaHref: "#contact",
+    logoHref: "/en",
   },
   hero: {
     tagline: "I design, structure and build digital products",
