@@ -64,7 +64,8 @@ export default function WhatIDo() {
       gsap.from(itemsRef.current.filter(Boolean), {
         y: 60,
         opacity: 0,
-        duration: 0.8,
+        scale: 0.88,
+        duration: 0.9,
         ease: "power3.out",
         stagger: 0.15,
         scrollTrigger: {
@@ -108,9 +109,9 @@ export default function WhatIDo() {
         .to(
           itemsRef.current.filter(Boolean),
           {
-            y: -24,
+            y: -40,
             opacity: 0,
-            scale: 0.95,
+            scale: 0.85,
             stagger: { each: 0.06, from: "start" },
             ease: "none",
           },

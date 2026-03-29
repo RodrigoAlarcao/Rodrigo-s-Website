@@ -48,7 +48,8 @@ export default function Contact() {
         gsap.from(Array.from(els), {
           y: 40,
           opacity: 0,
-          duration: 0.8,
+          scale: 0.88,
+          duration: 0.9,
           ease: "power3.out",
           stagger: 0.1,
           scrollTrigger: {
@@ -82,7 +83,8 @@ export default function Contact() {
           {
             y: -40,
             opacity: 0,
-            stagger: { each: 0.04, from: "start" },
+            scale: 0.85,
+            stagger: { each: 0.06, from: "start" },
             ease: "none",
           },
           "<"
