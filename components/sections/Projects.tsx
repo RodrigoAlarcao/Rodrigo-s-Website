@@ -80,8 +80,8 @@ export default function Projects() {
       gsap.from(rowsRef.current.filter(Boolean), {
         y: 40,
         opacity: 0,
-        scale: 0.88,
-        duration: 0.9,
+        scale: 0.82,
+        duration: 1.0,
         ease: "power3.out",
         stagger: 0.1,
         scrollTrigger: { trigger: sectionRef.current, start: "top 75%" },
@@ -110,8 +110,8 @@ export default function Projects() {
           {
             y: -40,
             opacity: 0,
-            scale: 0.85,
-            stagger: { each: 0.06, from: "start" },
+            scale: 0.78,
+            stagger: { each: 0.08, from: "start" },
             ease: "none",
           },
           "<"
