@@ -107,7 +107,11 @@ export const ptContent: SiteContent = {
   about: [
     { text: "Sou designer há ", accent: false },
     { text: "7 anos", accent: true },
-    { text: ". O que me distingue não é a velocidade, é o processo. Penso o produto, desenho a experiência, e ", accent: false },
+    { text: ". O que me distingue não é a velocidade, é o processo. Desenvolvi uma ", accent: false },
+    { text: "metodologia própria", accent: true },
+    { text: " de vibe coding, com 6 documentos que estruturam cada projeto de forma ", accent: false },
+    { text: "consistente, rápida e escalável", accent: true },
+    { text: ". Parto do problema, penso o produto, desenho a experiência, e ", accent: false },
     { text: "torno a ideia real", accent: true },
     { text: ".", accent: false },
   ],
