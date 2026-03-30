@@ -150,7 +150,7 @@ export default function WhatIDo({ content }: { content: SectionGroup }) {
             gsap.to(p,         { clearProps: "color",  duration: 0.3, ease: "power2.out" });
           }
         },
-        { rootMargin: "-15% 0px -15% 0px", threshold: 0 }
+        { rootMargin: "-20% 0px -35% 0px", threshold: 0 }
       );
 
       obs.observe(item!);
