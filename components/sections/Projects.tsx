@@ -48,39 +48,59 @@ export default function Projects({ content }: { content: { ui: ProjectsUI; items
     return () => ctx.revert();
   }, []);
 
-  // ── Mobile: IntersectionObserver hover effect (independent of Lenis/ScrollTrigger) ──
+  // ── Mobile: IntersectionObserver hover effect — exclusive, one active at a time ──
   useIsomorphicLayoutEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (window.innerWidth >= 768) return;
 
-    const observers: IntersectionObserver[] = [];
-
-    rowsRef.current.filter(Boolean).forEach((row) => {
+    const rowEls = rowsRef.current.filter(Boolean).map((row) => {
       const item      = row!.querySelector<HTMLElement>(".group");
       const h3        = item?.querySelector<HTMLElement>("h3");
       const titleSpan = h3?.querySelector<HTMLElement>("span");
       const underline = titleSpan?.querySelector<HTMLElement>("span");
       const p         = item?.querySelector<HTMLElement>("p");
-      if (!item || !h3 || !titleSpan || !underline || !p) return;
+      return { row: row!, h3, titleSpan, underline, p };
+    });
+
+    const activate = (i: number) => {
+      const { h3, titleSpan, underline, p } = rowEls[i];
+      if (!h3 || !titleSpan || !underline || !p) return;
+      gsap.to(h3,        { color: "var(--color-accent)", duration: 0.35, ease: "power2.out" });
+      gsap.to(titleSpan, { y: -2,        duration: 0.35, ease: "power2.out" });
+      gsap.to(underline, { width: "100%", duration: 0.5,  ease: "power2.out" });
+      gsap.to(p,         { color: "var(--color-text)",   duration: 0.5,  ease: "power2.out" });
+    };
+
+    const deactivate = (i: number) => {
+      const { h3, titleSpan, underline, p } = rowEls[i];
+      if (!h3 || !titleSpan || !underline || !p) return;
+      gsap.to(h3,        { clearProps: "color", duration: 0.3, ease: "power2.out" });
+      gsap.to(titleSpan, { y: 0,                duration: 0.3, ease: "power2.out" });
+      gsap.to(underline, { width: "0%",          duration: 0.3, ease: "power2.out" });
+      gsap.to(p,         { clearProps: "color",  duration: 0.3, ease: "power2.out" });
+    };
+
+    let activeIndex = -1;
+    const observers: IntersectionObserver[] = [];
+
+    rowEls.forEach(({ row, h3, titleSpan, underline, p }, idx) => {
+      if (!h3 || !titleSpan || !underline || !p) return;
 
       const obs = new IntersectionObserver(
         ([entry]) => {
           if (entry.isIntersecting) {
-            gsap.to(h3,        { color: "var(--color-accent)", duration: 0.35, ease: "power2.out" });
-            gsap.to(titleSpan, { y: -2,        duration: 0.35, ease: "power2.out" });
-            gsap.to(underline, { width: "100%", duration: 0.5,  ease: "power2.out" });
-            gsap.to(p,         { color: "var(--color-text)",   duration: 0.5,  ease: "power2.out" });
-          } else {
-            gsap.to(h3,        { clearProps: "color", duration: 0.3, ease: "power2.out" });
-            gsap.to(titleSpan, { y: 0,                duration: 0.3, ease: "power2.out" });
-            gsap.to(underline, { width: "0%",          duration: 0.3, ease: "power2.out" });
-            gsap.to(p,         { clearProps: "color",  duration: 0.3, ease: "power2.out" });
+            if (activeIndex !== -1 && activeIndex !== idx) deactivate(activeIndex);
+            activeIndex = idx;
+            activate(idx);
+          } else if (activeIndex === idx) {
+            activeIndex = -1;
+            deactivate(idx);
           }
         },
         { rootMargin: "-20% 0px -35% 0px", threshold: 0 }
       );
 
-      obs.observe(row!);
+      obs.observe(row);
       observers.push(obs);
     });
 
