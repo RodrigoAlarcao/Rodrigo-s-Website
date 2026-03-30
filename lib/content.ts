@@ -121,18 +121,18 @@ export const ptContent: SiteContent = {
     items: [
       {
         number: "01",
-        title: "Product Design first",
-        body: "O utilizador não é um requisito, é o ponto de partida. Cada decisão de design começa por perceber quem usa, em que contexto, e o que realmente precisa de acontecer.",
+        title: "Transformo ideias em produtos reais",
+        body: "Pego em conceitos ainda vagos e transformo-os em produtos digitais funcionais, prontos a ser usados no mundo real. Estruturo, priorizo e tomo decisões para sair do abstrato e chegar rapidamente a algo concreto.",
       },
       {
         number: "02",
-        title: "AI como co-piloto",
-        body: "Uso Claude Code, Cursor e vibe coding como extensão do meu processo. A AI executa, eu decido.",
+        title: "Design orientado a produto",
+        body: "Não faço apenas interfaces — desenho experiências completas, do fluxo à interface, sempre com foco no problema que precisa de ser resolvido. Cada decisão tem uma razão e um impacto claro no utilizador e no negócio.",
       },
       {
         number: "03",
-        title: "De ideia a realidade",
-        body: "Não entrego ficheiros. Entrego produtos. O meu processo foi desenhado para chegar à produção sozinho, sem overhead desnecessário.",
+        title: "MVPs que chegam ao mercado",
+        body: "Lanço produtos rápidos, focados no essencial, sem comprometer a qualidade nem a visão a longo prazo. O objetivo não é só validar ideias — é colocá-las a funcionar, com utilizadores reais.",
       },
     ],
   },
@@ -142,18 +142,18 @@ export const ptContent: SiteContent = {
     items: [
       {
         number: "01",
-        title: "Product Design first",
-        body: "Começo pelo utilizador, não pela tecnologia. Antes de escrever uma linha de código, percebo o problema, os fluxos e o que realmente precisa de existir.",
+        title: "Começo pelo utilizador",
+        body: "Antes de qualquer decisão, percebo quem usa, em que contexto, e o que realmente precisa de acontecer. Isto define prioridades, simplifica decisões e evita construir o que não é necessário.",
       },
       {
         number: "02",
         title: "AI como alavanca",
-        body: "Claude Code, Cursor, vibe coding. Não como atalho — como alavanca. A AI amplifica a intenção de design, não a substitui.",
+        body: "Uso ferramentas como Claude Code e vibe coding para acelerar execução e explorar soluções. A AI ajuda a ir mais rápido, mas a direção, o critério e as decisões continuam a ser minhas.",
       },
       {
         number: "03",
-        title: "MVP em semanas",
-        body: "Da ideia ao live em dias. Já o fiz três vezes. O ritmo não compromete a qualidade — obriga a focar no que é essencial.",
+        title: "Foco e velocidade",
+        body: "Trabalho em ciclos curtos, elimino o desnecessário e levo ideias a produção em semanas, não meses. O ritmo não compromete a qualidade, obriga a clareza, foco e decisões melhores.",
       },
     ],
   },
