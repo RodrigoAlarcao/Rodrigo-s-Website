@@ -44,7 +44,7 @@ export default function Nav({ content }: { content: NavContent }) {
         duration: 0.8,
         ease: "power2.out",
         // Remove GSAP inline styles after animation so CSS classes take over cleanly
-        onComplete: () => gsap.set(navRef.current, { clearProps: "transform,opacity" }),
+        onComplete: () => { gsap.set(navRef.current, { clearProps: "transform,opacity" }); },
       });
     }, navRef);
 
