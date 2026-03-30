@@ -122,17 +122,17 @@ export const ptContent: SiteContent = {
       {
         number: "01",
         title: "Penso",
-        body: "Começo pelo problema, não pela solução. Antes de qualquer linha de código ou pixel no Figma, percebo o que está realmente em jogo.",
+        body: "Começo pelo problema, não pela solução. Antes de qualquer pixel ou linha de código, paro para perceber o que o produto precisa de ser, e porquê. É aqui que a maioria falha. Saltam para o ecrã quando deviam ainda estar a fazer perguntas.",
       },
       {
         number: "02",
         title: "Estruturo",
-        body: "Transformo ideias cruas em produtos com forma. Tenho uma metodologia própria para isso — desenvolvida ao longo de dois anos com AI.",
+        body: "Desenvolvi uma metodologia própria: seis documentos que organizam tudo o que um projeto precisa antes de começar a ser construído. Consistente, escalável, e pensada para trabalhar com AI sem perder o controlo.",
       },
       {
         number: "03",
         title: "Construo",
-        body: "Não fico pelo desenho. Lanço. Já o fiz sozinho. Em semana e meia.",
+        body: "Não fico pelo desenho. Lanço. O meu processo foi desenhado para ir do conceito ao produto real, sozinho, em semanas, sem depender de uma equipa grande.",
       },
     ],
   },
