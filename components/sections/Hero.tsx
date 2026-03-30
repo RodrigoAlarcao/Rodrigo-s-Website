@@ -129,7 +129,7 @@ export default function Hero({ content }: { content: HeroContent }) {
       ctx.globalCompositeOperation = "source-over";
       if (bgFront.complete && bgFront.naturalWidth > 0) {
         // Parallax: front image moves slightly slower than the section scroll
-        const parallaxY = scrollOffsetRef.current * H * 0.12;
+        const parallaxY = scrollOffsetRef.current * H * 0.25;
         ctx.drawImage(bgFront, 0, parallaxY, W, H - parallaxY);
       } else {
         ctx.fillStyle = "#0A0A09";
