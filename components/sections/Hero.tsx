@@ -48,7 +48,7 @@ export default function Hero({ content }: { content: HeroContent }) {
 
     // Preload wireframe image — drawn on canvas as the "always-visible" base layer
     const bgFront = new Image();
-    bgFront.src = "/images/hero-bg-front3.jpg";
+    bgFront.src = "/images/hero-bg-front4.jpg";
 
     // ── Marching squares iso-contour approach ────────────────────────────────
     // Contour lines of a continuous scalar field NEVER cross each other.
@@ -444,13 +444,25 @@ export default function Hero({ content }: { content: HeroContent }) {
       onMouseLeave={handleMouseLeave}
       className="relative overflow-hidden min-h-screen flex flex-col justify-between pt-32 md:pt-40 pb-16 md:pb-24"
     >
-      {/* Layer 1 — background image (CSS, position absolute) */}
+      {/* Layer 1 — background image (CSS, position absolute) — desktop only */}
       <div
         ref={bgImageRef}
         aria-hidden="true"
-        className="absolute inset-0"
+        className="absolute inset-0 hidden md:block"
         style={{
-          backgroundImage: "url('/images/hero-bg7.jpg')",
+          backgroundImage: "url('/images/hero-bg8.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
+        }}
+      />
+
+      {/* Layer 1 — background image mobile (no reveal effect on mobile) */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 md:hidden"
+        style={{
+          backgroundImage: "url('/images/bg-mobile2.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
@@ -470,7 +482,7 @@ export default function Hero({ content }: { content: HeroContent }) {
       <canvas
         ref={canvasRef}
         aria-hidden="true"
-        className="absolute inset-0 z-10 pointer-events-none w-full h-full"
+        className="absolute inset-0 z-10 pointer-events-none w-full h-full hidden md:block"
       />
 
       {/* Layer 3 — text content (unchanged JSX) */}
