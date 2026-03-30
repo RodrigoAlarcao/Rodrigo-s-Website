@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import gsap from "gsap";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
 import { useMagnetic } from "@/hooks/useMagnetic";
+import { useLoading } from "@/context/LoadingContext";
 import type { NavContent } from "@/lib/content";
 
 export default function Nav({ content }: { content: NavContent }) {
@@ -12,6 +13,7 @@ export default function Nav({ content }: { content: NavContent }) {
   const ctaRef = useRef<HTMLAnchorElement>(null);
   const ctaLettersRef = useRef<HTMLSpanElement>(null);
   const [scrolled, setScrolled] = useState(false);
+  const { isLoaded } = useLoading();
 
   // Frosted glass on scroll
   useEffect(() => {
@@ -20,22 +22,34 @@ export default function Nav({ content }: { content: NavContent }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Entrance animation
+  // Set initial hidden state before first paint — always, regardless of isLoaded
   useIsomorphicLayoutEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    gsap.set(navRef.current, { y: -20, opacity: 0 });
+  }, []);
+
+  // Entrance animation — only runs after preloader completes
+  useIsomorphicLayoutEffect(() => {
+    if (!isLoaded) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      gsap.set(navRef.current, { clearProps: "all" });
+      return;
+    }
 
     const ctx = gsap.context(() => {
-      gsap.from(navRef.current, {
-        y: -20,
-        opacity: 0,
+      gsap.to(navRef.current, {
+        y: 0,
+        opacity: 1,
         duration: 0.8,
         ease: "power2.out",
-        delay: 0.3,
+        // Remove GSAP inline styles after animation so CSS classes take over cleanly
+        onComplete: () => gsap.set(navRef.current, { clearProps: "transform,opacity" }),
       });
     }, navRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [isLoaded]);
 
   // Magnetic CTA
   useMagnetic(ctaRef, 0.4);
@@ -68,7 +82,7 @@ export default function Nav({ content }: { content: NavContent }) {
   return (
     <header
       ref={navRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 backdrop-blur-lg bg-black/70 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-[border-color,box-shadow] duration-500 backdrop-blur-lg bg-black/70 ${
         scrolled
           ? "border-b border-white/10 shadow-[0_1px_24px_rgba(0,0,0,0.6)]"
           : "border-b border-white/5"

@@ -8,6 +8,8 @@ import "../globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import Cursor from "@/components/ui/Cursor";
 import HeroPreload from "@/components/HeroPreload";
+import { LoadingProvider } from "@/context/LoadingContext";
+import Preloader from "@/components/Preloader";
 
 // ─── Cabinet Grotesk — Fontshare (local) ────────────────────────────
 const cabinetGrotesk = localFont({
@@ -74,8 +76,11 @@ export default function PtLayout({
     <html lang="pt" className={`dark ${cabinetGrotesk.variable}`}>
       <body className="antialiased">
         <HeroPreload />
-        <Cursor />
-        <SmoothScroll>{children}</SmoothScroll>
+        <LoadingProvider>
+          <Preloader />
+          <Cursor />
+          <SmoothScroll>{children}</SmoothScroll>
+        </LoadingProvider>
       </body>
     </html>
   );
