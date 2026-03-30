@@ -17,7 +17,10 @@ export default function Hero({ content }: { content: HeroContent }) {
   const taglineRef = useRef<HTMLParagraphElement>(null);
   const ctaRef = useRef<HTMLAnchorElement>(null);
 
-  // ── Layer 1: background image ref (parallax) ────────────────────────────────
+  // ── Parallax wrapper: both image layers move together ───────────────────────
+  const parallaxWrapperRef = useRef<HTMLDivElement>(null);
+
+  // ── Layer 1: background image ref ───────────────────────────────────────────
   const bgImageRef = useRef<HTMLDivElement>(null);
 
   // ── Layer 2: canvas refs ─────────────────────────────────────────────────────
@@ -26,7 +29,6 @@ export default function Hero({ content }: { content: HeroContent }) {
   const curPos = useRef({ x: -9999, y: -9999 });
   const isHovering = useRef(false); // true while cursor is inside the hero
   const fadeVal = useRef(0);        // 0–1, lerped for smooth enter/leave
-  const scrollOffsetRef = useRef(0); // 0–1, hero scroll progress for canvas parallax
 
   // ── Canvas setup ─────────────────────────────────────────────────────────────
   useIsomorphicLayoutEffect(() => {
@@ -38,9 +40,12 @@ export default function Hero({ content }: { content: HeroContent }) {
     const canvas = canvasRef.current!;
     const container = containerRef.current!;
 
+    const isMobileRef = { current: container.offsetWidth < 768 };
+
     const ro = new ResizeObserver(() => {
       canvas.width = container.offsetWidth;
       canvas.height = container.offsetHeight;
+      isMobileRef.current = container.offsetWidth < 768;
     });
     ro.observe(container);
     canvas.width = container.offsetWidth;
@@ -48,7 +53,7 @@ export default function Hero({ content }: { content: HeroContent }) {
 
     // Preload wireframe image — drawn on canvas as the "always-visible" base layer
     const bgFront = new Image();
-    bgFront.src = "/images/hero-bg-front3.jpg";
+    bgFront.src = "/images/hero-bg-front4.jpg";
 
     // ── Marching squares iso-contour approach ────────────────────────────────
     // Contour lines of a continuous scalar field NEVER cross each other.
@@ -127,13 +132,13 @@ export default function Hero({ content }: { content: HeroContent }) {
       // Step 1: Wireframe base layer (replaces solid black)
       // Falls back to dark fill while image is loading on first frame
       ctx.globalCompositeOperation = "source-over";
-      if (bgFront.complete && bgFront.naturalWidth > 0) {
-        // Parallax: front image moves slightly slower than the section scroll
-        const parallaxY = scrollOffsetRef.current * H * 0.12;
-        ctx.drawImage(bgFront, 0, parallaxY, W, H - parallaxY);
-      } else {
-        ctx.fillStyle = "#0A0A09";
-        ctx.fillRect(0, 0, W, H);
+      if (!isMobileRef.current) {
+        if (bgFront.complete && bgFront.naturalWidth > 0) {
+          ctx.drawImage(bgFront, 0, 0, W, H);
+        } else {
+          ctx.fillStyle = "#0A0A09";
+          ctx.fillRect(0, 0, W, H);
+        }
       }
 
       // Step 2: Lerp cursor position + fade value
@@ -142,10 +147,10 @@ export default function Hero({ content }: { content: HeroContent }) {
       // fadeVal → 1 on hover, → 0 on leave (0.055 ≈ ~0.8s fade)
       fadeVal.current += ((isHovering.current ? 1 : 0) - fadeVal.current) * 0.055;
 
-      // Step 3: Organic blob reveal (destination-out)
+      // Step 3: Organic blob reveal (destination-out) — desktop only (requires mouse)
       // A closed Catmull-Rom spline filled with a soft radial gradient punches
       // an organic, non-circular hole through the wireframe, revealing the portrait.
-      const cursorActive = fadeVal.current > 0.01;
+      const cursorActive = !isMobileRef.current && fadeVal.current > 0.01;
       if (cursorActive) {
         const cx = curPos.current.x, cy = curPos.current.y;
         const BLOB_R  = 150; // base radius (px)
@@ -229,7 +234,7 @@ export default function Hero({ content }: { content: HeroContent }) {
       for (let li = 0; li < N_LEVELS; li++) {
         const lv = LEVELS[li];
         // Outer contours slightly brighter; inner contours near-invisible
-        const alpha = 0.38 - li * 0.007;
+        const alpha = 0.55 - li * 0.010;
         if (alpha <= 0) continue;
         // Fiber-optic pulse: accent (#ECC15B) → white, phase-offset per level
         // so the "light" appears to travel across the contour field over time
@@ -352,8 +357,8 @@ export default function Hero({ content }: { content: HeroContent }) {
           "-=0.5"
         );
 
-      // Background image parallax — moves at 25% of scroll speed, recedes into depth
-      gsap.to(bgImageRef.current, {
+      // Parallax wrapper — both image layers move together at 25% scroll speed
+      gsap.to(parallaxWrapperRef.current, {
         y: "25%",
         ease: "none",
         scrollTrigger: {
@@ -363,16 +368,6 @@ export default function Hero({ content }: { content: HeroContent }) {
           scrub: true,
           invalidateOnRefresh: true,
         },
-      });
-
-      // Canvas front-image parallax — feeds scrollOffsetRef used in draw()
-      ScrollTrigger.create({
-        trigger: containerRef.current,
-        start: "top top",
-        end: "bottom top",
-        scrub: true,
-        invalidateOnRefresh: true,
-        onUpdate: (self) => { scrollOffsetRef.current = self.progress; },
       });
 
       // Divider scroll-out: fromTo is explicit about both start and end states,
@@ -444,18 +439,41 @@ export default function Hero({ content }: { content: HeroContent }) {
       onMouseLeave={handleMouseLeave}
       className="relative overflow-hidden min-h-screen flex flex-col justify-between pt-32 md:pt-40 pb-16 md:pb-24"
     >
-      {/* Layer 1 — background image (CSS, position absolute) */}
+      {/* Parallax wrapper — Layer 1 + Layer 2 move as one unit */}
       <div
-        ref={bgImageRef}
+        ref={parallaxWrapperRef}
         aria-hidden="true"
         className="absolute inset-0"
-        style={{
-          backgroundImage: "url('/images/hero-bg7.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
-        }}
-      />
+      >
+        {/* Layer 1 — background image (CSS, position absolute) — desktop only */}
+        <div
+          ref={bgImageRef}
+          className="absolute inset-0 hidden md:block"
+          style={{
+            backgroundImage: "url('/images/hero-bg8.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
+          }}
+        />
+
+        {/* Layer 1 — background image mobile (no reveal effect on mobile) */}
+        <div
+          className="absolute inset-0 md:hidden"
+          style={{
+            backgroundImage: "url('/images/bg-mobile2.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
+          }}
+        />
+
+        {/* Layer 2 — canvas: organic splines + cursor reveal mask */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 z-10 pointer-events-none w-full h-full"
+        />
+      </div>
 
       {/* Layer 1b — bottom gradient: fades hero into site bg colour (#0A0A09) */}
       <div
@@ -466,43 +484,40 @@ export default function Hero({ content }: { content: HeroContent }) {
         }}
       />
 
-      {/* Layer 2 — canvas: organic splines + cursor reveal mask */}
-      <canvas
-        ref={canvasRef}
-        aria-hidden="true"
-        className="absolute inset-0 z-10 pointer-events-none w-full h-full"
-      />
+      {/* Layer 3 — text content */}
+      <div className="w-full container-site relative z-20 flex flex-col justify-between flex-1">
 
-      {/* Layer 3 — text content (unchanged JSX) */}
-      <div className="w-full container-site relative z-20 flex flex-col gap-16 md:gap-0 md:justify-between md:h-full md:flex-1">
+        {/* Top group: label + name + subtitle */}
+        <div>
+          {/* Label acima do nome */}
+          <div ref={labelRef} className="font-mono text-[11px] uppercase tracking-[0.12em] mb-4" style={{ color: 'var(--color-accent)', opacity: 0.7 }}>
+            Design · Build · Launch
+          </div>
 
-        {/* Label acima do nome */}
-        <div ref={labelRef} className="font-mono text-[11px] uppercase tracking-[0.12em] mb-4" style={{ color: 'var(--color-accent)', opacity: 0.7 }}>
-          Design · Build · Launch
+          {/* Nome — Rodrigo light italic / Alarcão extrabold */}
+          <h1
+            ref={nameRef}
+            className="font-display text-hero-name text-text leading-[0.92] tracking-tight"
+          >
+            <span className="block font-light italic">Rodrigo</span>
+            <span className="block font-extrabold">Alarcão</span>
+          </h1>
+
         </div>
 
-        {/* Nome — Rodrigo light italic / Alarcão extrabold */}
-        <h1
-          ref={nameRef}
-          className="font-display text-hero-name text-text leading-[0.92] tracking-tight"
-        >
-          <span className="block font-light italic">Rodrigo</span>
-          <span className="block font-extrabold">Alarcão</span>
-        </h1>
-
-        {/* Separador em accent + rodapé do hero */}
-        <div className="mt-10 md:mt-14">
-          {/* 1px accent divider — PRD secção 2.4 */}
+        {/* Bottom group: divider + tagline + CTA */}
+        <div>
+          {/* 1px accent divider */}
           <div
             ref={dividerRef}
-            className="w-full md:w-1/2 border-t border-accent mb-10 md:mb-14"
+            className="w-full md:w-1/2 border-t border-accent mb-8 md:mb-14"
           />
 
           {/* Tagline + CTA — editorial: texto à esquerda, CTA à direita */}
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 md:gap-16">
             <p
               ref={taglineRef}
-              className="font-body text-text max-w-[480px] leading-[1.5] text-[1rem] md:text-[1.0625rem]"
+              className="font-body text-text max-w-[480px] leading-[1.5] text-[1.125rem] md:text-[1.375rem]"
             >
               <span className="block font-semibold">
                 {content.tagline}
@@ -512,7 +527,7 @@ export default function Hero({ content }: { content: HeroContent }) {
               </span>
             </p>
 
-            {/* CTA — confiante, sem implorar atenção */}
+            {/* CTA */}
             <a
               ref={ctaRef}
               href={content.ctaHref}

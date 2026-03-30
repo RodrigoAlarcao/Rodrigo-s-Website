@@ -136,7 +136,7 @@ export default function Contact({ content }: { content: ContactContent }) {
               <br />
               {content.headingLine2}
             </h2>
-            <p data-animate className="text-hero-tagline font-body font-light italic text-dim leading-[1.4]">
+            <p data-animate className="text-hero-tagline font-body font-light italic text-accent leading-[1.4]">
               {content.sub}
             </p>
             <p data-animate className="font-body font-light text-dim leading-[1.75] mt-4 max-w-sm">

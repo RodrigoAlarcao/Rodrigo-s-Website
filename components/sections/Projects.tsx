@@ -48,13 +48,75 @@ export default function Projects({ content }: { content: { ui: ProjectsUI; items
     return () => ctx.revert();
   }, []);
 
+  // ── Mobile: IntersectionObserver hover effect — exclusive, one active at a time ──
+  useIsomorphicLayoutEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.innerWidth >= 768) return;
+
+    const rowEls = rowsRef.current.filter(Boolean).map((row) => {
+      const item      = row!.querySelector<HTMLElement>(".group");
+      const h3        = item?.querySelector<HTMLElement>("h3");
+      const titleSpan = h3?.querySelector<HTMLElement>("span");
+      const underline = titleSpan?.querySelector<HTMLElement>("span");
+      const p         = item?.querySelector<HTMLElement>("p");
+      return { row: row!, h3, titleSpan, underline, p };
+    });
+
+    const activate = (i: number) => {
+      const { h3, titleSpan, underline, p } = rowEls[i];
+      if (!h3 || !titleSpan || !underline || !p) return;
+      gsap.to(h3,        { color: "var(--color-accent)", duration: 0.35, ease: "power2.out" });
+      gsap.to(titleSpan, { y: -2,        duration: 0.35, ease: "power2.out" });
+      gsap.to(underline, { width: "100%", duration: 0.5,  ease: "power2.out" });
+      gsap.to(p,         { color: "var(--color-text)",   duration: 0.5,  ease: "power2.out" });
+    };
+
+    const deactivate = (i: number) => {
+      const { h3, titleSpan, underline, p } = rowEls[i];
+      if (!h3 || !titleSpan || !underline || !p) return;
+      gsap.to(h3,        { clearProps: "color", duration: 0.3, ease: "power2.out" });
+      gsap.to(titleSpan, { y: 0,                duration: 0.3, ease: "power2.out" });
+      gsap.to(underline, { width: "0%",          duration: 0.3, ease: "power2.out" });
+      gsap.to(p,         { clearProps: "color",  duration: 0.3, ease: "power2.out" });
+    };
+
+    let activeIndex = -1;
+    const observers: IntersectionObserver[] = [];
+
+    rowEls.forEach(({ row, h3, titleSpan, underline, p }, idx) => {
+      if (!h3 || !titleSpan || !underline || !p) return;
+
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            if (activeIndex !== -1 && activeIndex !== idx) deactivate(activeIndex);
+            activeIndex = idx;
+            activate(idx);
+          } else if (activeIndex === idx) {
+            activeIndex = -1;
+            deactivate(idx);
+          }
+        },
+        { rootMargin: "-20% 0px -35% 0px", threshold: 0 }
+      );
+
+      obs.observe(row);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach((obs) => obs.disconnect());
+  }, []);
+
   const toggleProject = (i: number) => {
     const isOpen = openIndex === i;
 
     if (openIndex !== null) {
       const prevEl = detailRefs.current[openIndex];
       const prevIcon = iconRefs.current[openIndex];
-      if (prevEl) gsap.to(prevEl, { height: 0, opacity: 0, duration: 0.35, ease: "power2.in", overwrite: true });
+      if (prevEl) gsap.to(prevEl, {
+        height: 0, opacity: 0, duration: 0.35, ease: "power2.in", overwrite: true,
+        onComplete: () => ScrollTrigger.refresh(),
+      });
       if (prevIcon) gsap.to(prevIcon, { rotate: 0, duration: 0.3, ease: "power2.out" });
     }
 
@@ -62,7 +124,13 @@ export default function Projects({ content }: { content: { ui: ProjectsUI; items
       const el = detailRefs.current[i];
       const icon = iconRefs.current[i];
       if (el) {
-        gsap.to(el, { height: "auto", opacity: 1, duration: 0.5, ease: "power3.out", overwrite: true });
+        gsap.to(el, {
+          height: "auto", opacity: 1, duration: 0.5, ease: "power3.out", overwrite: true,
+          onComplete: () => {
+            gsap.set(el, { clearProps: "overflow" }); // remove inline overflow:hidden after open
+            ScrollTrigger.refresh();
+          },
+        });
         const innerEls = el.querySelectorAll("[data-detail-item]");
         gsap.from(innerEls, {
           y: 18,
