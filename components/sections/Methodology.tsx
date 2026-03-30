@@ -117,31 +117,47 @@ export default function Methodology({ content }: { content: SectionGroup }) {
           "<"
         );
 
-      // ── Mobile: scroll-triggered hover effect (no mouse on touch) ────────────
-      if (window.innerWidth < 768) {
-        (itemsRef.current.filter(Boolean) as HTMLDivElement[]).forEach((item) => {
-          const h3        = item.querySelector("h3")!;
-          const titleSpan = h3.querySelector("span")!;
-          const underline = titleSpan.querySelector("span")!;
-          const p         = item.querySelector("p")!;
-
-          gsap.timeline({
-            scrollTrigger: {
-              trigger: item,
-              start: "top 65%",
-              end: "bottom 35%",
-              toggleActions: "play reverse play reverse",
-            },
-          })
-          .to(h3,         { color: "var(--color-accent)", duration: 0.3, ease: "power2.out" }, 0)
-          .to(titleSpan,  { y: -2,                        duration: 0.3, ease: "power2.out" }, 0)
-          .to(underline,  { width: "100%",                duration: 0.5, ease: "power2.out" }, 0)
-          .to(p,          { color: "var(--color-text)",   duration: 0.5, ease: "power2.out" }, 0);
-        });
-      }
     }, sectionRef);
 
     return () => ctx.revert();
+  }, []);
+
+  // ── Mobile: IntersectionObserver hover effect (independent of Lenis/ScrollTrigger) ──
+  useIsomorphicLayoutEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.innerWidth >= 768) return;
+
+    const observers: IntersectionObserver[] = [];
+
+    itemsRef.current.filter(Boolean).forEach((item) => {
+      const h3        = item!.querySelector<HTMLElement>("h3");
+      const titleSpan = h3?.querySelector<HTMLElement>("span");
+      const underline = titleSpan?.querySelector<HTMLElement>("span");
+      const p         = item!.querySelector<HTMLElement>("p");
+      if (!h3 || !titleSpan || !underline || !p) return;
+
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            gsap.to(h3,        { color: "var(--color-accent)", duration: 0.35, ease: "power2.out" });
+            gsap.to(titleSpan, { y: -2,        duration: 0.35, ease: "power2.out" });
+            gsap.to(underline, { width: "100%", duration: 0.5,  ease: "power2.out" });
+            gsap.to(p,         { color: "var(--color-text)",   duration: 0.5,  ease: "power2.out" });
+          } else {
+            gsap.to(h3,        { clearProps: "color", duration: 0.3, ease: "power2.out" });
+            gsap.to(titleSpan, { y: 0,                duration: 0.3, ease: "power2.out" });
+            gsap.to(underline, { width: "0%",          duration: 0.3, ease: "power2.out" });
+            gsap.to(p,         { clearProps: "color",  duration: 0.3, ease: "power2.out" });
+          }
+        },
+        { rootMargin: "-15% 0px -15% 0px", threshold: 0 }
+      );
+
+      obs.observe(item!);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach((obs) => obs.disconnect());
   }, []);
 
   return (
