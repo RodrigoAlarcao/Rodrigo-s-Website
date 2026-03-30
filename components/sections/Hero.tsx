@@ -40,9 +40,12 @@ export default function Hero({ content }: { content: HeroContent }) {
     const canvas = canvasRef.current!;
     const container = containerRef.current!;
 
+    const isMobileRef = { current: container.offsetWidth < 768 };
+
     const ro = new ResizeObserver(() => {
       canvas.width = container.offsetWidth;
       canvas.height = container.offsetHeight;
+      isMobileRef.current = container.offsetWidth < 768;
     });
     ro.observe(container);
     canvas.width = container.offsetWidth;
@@ -129,11 +132,13 @@ export default function Hero({ content }: { content: HeroContent }) {
       // Step 1: Wireframe base layer (replaces solid black)
       // Falls back to dark fill while image is loading on first frame
       ctx.globalCompositeOperation = "source-over";
-      if (bgFront.complete && bgFront.naturalWidth > 0) {
-        ctx.drawImage(bgFront, 0, 0, W, H);
-      } else {
-        ctx.fillStyle = "#0A0A09";
-        ctx.fillRect(0, 0, W, H);
+      if (!isMobileRef.current) {
+        if (bgFront.complete && bgFront.naturalWidth > 0) {
+          ctx.drawImage(bgFront, 0, 0, W, H);
+        } else {
+          ctx.fillStyle = "#0A0A09";
+          ctx.fillRect(0, 0, W, H);
+        }
       }
 
       // Step 2: Lerp cursor position + fade value
@@ -142,10 +147,10 @@ export default function Hero({ content }: { content: HeroContent }) {
       // fadeVal → 1 on hover, → 0 on leave (0.055 ≈ ~0.8s fade)
       fadeVal.current += ((isHovering.current ? 1 : 0) - fadeVal.current) * 0.055;
 
-      // Step 3: Organic blob reveal (destination-out)
+      // Step 3: Organic blob reveal (destination-out) — desktop only (requires mouse)
       // A closed Catmull-Rom spline filled with a soft radial gradient punches
       // an organic, non-circular hole through the wireframe, revealing the portrait.
-      const cursorActive = fadeVal.current > 0.01;
+      const cursorActive = !isMobileRef.current && fadeVal.current > 0.01;
       if (cursorActive) {
         const cx = curPos.current.x, cy = curPos.current.y;
         const BLOB_R  = 150; // base radius (px)
@@ -229,7 +234,7 @@ export default function Hero({ content }: { content: HeroContent }) {
       for (let li = 0; li < N_LEVELS; li++) {
         const lv = LEVELS[li];
         // Outer contours slightly brighter; inner contours near-invisible
-        const alpha = 0.38 - li * 0.007;
+        const alpha = 0.55 - li * 0.010;
         if (alpha <= 0) continue;
         // Fiber-optic pulse: accent (#ECC15B) → white, phase-offset per level
         // so the "light" appears to travel across the contour field over time
@@ -466,7 +471,7 @@ export default function Hero({ content }: { content: HeroContent }) {
         {/* Layer 2 — canvas: organic splines + cursor reveal mask */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 z-10 pointer-events-none w-full h-full hidden md:block"
+          className="absolute inset-0 z-10 pointer-events-none w-full h-full"
         />
       </div>
 
