@@ -99,8 +99,8 @@ export const ptContent: SiteContent = {
     logoHref: "/",
   },
   hero: {
-    tagline: "Projeto, estruturo e construo produtos digitais",
-    taglineSub: "Da ideia ao MVP, em semanas.",
+    tagline: "Product Designer & AI Builder",
+    taglineSub: "Projeto, estruturo e construo produtos digitais",
     cta: "Fala comigo",
     ctaHref: "#contacto",
   },
@@ -241,8 +241,8 @@ export const enContent: SiteContent = {
     logoHref: "/en",
   },
   hero: {
-    tagline: "I design, structure and build digital products",
-    taglineSub: "From idea to MVP, in weeks.",
+    tagline: "Product Designer & AI Builder",
+    taglineSub: "I design, structure and build digital products",
     cta: "Talk to me",
     ctaHref: "#contact",
   },

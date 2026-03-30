@@ -503,10 +503,6 @@ export default function Hero({ content }: { content: HeroContent }) {
             <span className="block font-extrabold">Alarcão</span>
           </h1>
 
-          {/* Subtítulo da identidade */}
-          <p className="font-mono text-[11px] uppercase tracking-[0.14em] mt-4" style={{ color: 'var(--color-accent)', opacity: 0.6 }}>
-            Product Designer &amp; AI Builder
-          </p>
         </div>
 
         {/* Bottom group: divider + tagline + CTA */}
@@ -521,7 +517,7 @@ export default function Hero({ content }: { content: HeroContent }) {
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 md:gap-16">
             <p
               ref={taglineRef}
-              className="font-body text-text max-w-[480px] leading-[1.5] text-[1rem] md:text-[1.25rem]"
+              className="font-body text-text max-w-[480px] leading-[1.5] text-[1.125rem] md:text-[1.375rem]"
             >
               <span className="block font-semibold">
                 {content.tagline}
