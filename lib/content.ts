@@ -122,12 +122,12 @@ export const ptContent: SiteContent = {
       {
         number: "01",
         title: "Penso",
-        body: "Começo pelo problema, não pela solução. Antes de qualquer pixel ou linha de código, paro para perceber o que o produto precisa de ser, e porquê. É aqui que a maioria falha. Saltam para o ecrã quando deviam ainda estar a fazer perguntas.",
+        body: "Começo pelo problema, não pela solução. Antes de qualquer pixel ou linha de código, paro para perceber o que o produto precisa de ser, e porquê.",
       },
       {
         number: "02",
         title: "Estruturo",
-        body: "Desenvolvi uma metodologia própria: seis documentos que organizam tudo o que um projeto precisa antes de começar a ser construído. Consistente, escalável, e pensada para trabalhar com AI sem perder o controlo.",
+        body: "Desenvolvi uma metodologia própria: seis documentos que organizam tudo o que um projeto precisa antes de começar a ser construído.",
       },
       {
         number: "03",
