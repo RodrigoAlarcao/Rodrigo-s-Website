@@ -484,36 +484,44 @@ export default function Hero({ content }: { content: HeroContent }) {
         }}
       />
 
-      {/* Layer 3 — text content (unchanged JSX) */}
-      <div className="w-full container-site relative z-20 flex flex-col gap-16 md:gap-0 md:justify-between md:h-full md:flex-1">
+      {/* Layer 3 — text content */}
+      <div className="w-full container-site relative z-20 flex flex-col justify-between flex-1">
 
-        {/* Label acima do nome */}
-        <div ref={labelRef} className="font-mono text-[11px] uppercase tracking-[0.12em] mb-4" style={{ color: 'var(--color-accent)', opacity: 0.7 }}>
-          Design · Build · Launch
+        {/* Top group: label + name + subtitle */}
+        <div>
+          {/* Label acima do nome */}
+          <div ref={labelRef} className="font-mono text-[11px] uppercase tracking-[0.12em] mb-4" style={{ color: 'var(--color-accent)', opacity: 0.7 }}>
+            Design · Build · Launch
+          </div>
+
+          {/* Nome — Rodrigo light italic / Alarcão extrabold */}
+          <h1
+            ref={nameRef}
+            className="font-display text-hero-name text-text leading-[0.92] tracking-tight"
+          >
+            <span className="block font-light italic">Rodrigo</span>
+            <span className="block font-extrabold">Alarcão</span>
+          </h1>
+
+          {/* Subtítulo da identidade */}
+          <p className="font-mono text-[11px] uppercase tracking-[0.14em] mt-4" style={{ color: 'var(--color-accent)', opacity: 0.6 }}>
+            Product Designer &amp; AI Builder
+          </p>
         </div>
 
-        {/* Nome — Rodrigo light italic / Alarcão extrabold */}
-        <h1
-          ref={nameRef}
-          className="font-display text-hero-name text-text leading-[0.92] tracking-tight"
-        >
-          <span className="block font-light italic">Rodrigo</span>
-          <span className="block font-extrabold">Alarcão</span>
-        </h1>
-
-        {/* Separador em accent + rodapé do hero */}
-        <div className="mt-10 md:mt-14">
-          {/* 1px accent divider — PRD secção 2.4 */}
+        {/* Bottom group: divider + tagline + CTA */}
+        <div>
+          {/* 1px accent divider */}
           <div
             ref={dividerRef}
-            className="w-full md:w-1/2 border-t border-accent mb-10 md:mb-14"
+            className="w-full md:w-1/2 border-t border-accent mb-8 md:mb-14"
           />
 
           {/* Tagline + CTA — editorial: texto à esquerda, CTA à direita */}
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 md:gap-16">
             <p
               ref={taglineRef}
-              className="font-body text-text max-w-[480px] leading-[1.5] text-[1rem] md:text-[1.0625rem]"
+              className="font-body text-text max-w-[480px] leading-[1.5] text-[1rem] md:text-[1.25rem]"
             >
               <span className="block font-semibold">
                 {content.tagline}
@@ -523,7 +531,7 @@ export default function Hero({ content }: { content: HeroContent }) {
               </span>
             </p>
 
-            {/* CTA — confiante, sem implorar atenção */}
+            {/* CTA */}
             <a
               ref={ctaRef}
               href={content.ctaHref}
