@@ -43,6 +43,30 @@ export default function Projects({ content }: { content: { ui: ProjectsUI; items
         scrollTrigger: { trigger: sectionRef.current, start: "top 75%" },
       });
 
+      // ── Mobile: scroll-triggered hover effect (no mouse on touch) ────────────
+      if (window.innerWidth < 768) {
+        (rowsRef.current.filter(Boolean) as HTMLDivElement[]).forEach((row) => {
+          const item      = row.querySelector<HTMLElement>(".group")!;
+          const h3        = item.querySelector("h3")!;
+          const titleSpan = h3.querySelector("span")!;
+          const underline = titleSpan.querySelector("span")!;
+          const p         = item.querySelector("p")!;
+
+          gsap.timeline({
+            scrollTrigger: {
+              trigger: row,
+              start: "top 65%",
+              end: "bottom 35%",
+              toggleActions: "play reverse play reverse",
+            },
+          })
+          .to(h3,         { color: "var(--color-accent)", duration: 0.3, ease: "power2.out" }, 0)
+          .to(titleSpan,  { y: -2,                        duration: 0.3, ease: "power2.out" }, 0)
+          .to(underline,  { width: "100%",                duration: 0.5, ease: "power2.out" }, 0)
+          .to(p,          { color: "var(--color-text)",   duration: 0.5, ease: "power2.out" }, 0);
+        });
+      }
+
     }, sectionRef);
 
     return () => ctx.revert();
