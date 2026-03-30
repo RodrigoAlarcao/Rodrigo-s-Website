@@ -113,7 +113,10 @@ export default function Projects({ content }: { content: { ui: ProjectsUI; items
     if (openIndex !== null) {
       const prevEl = detailRefs.current[openIndex];
       const prevIcon = iconRefs.current[openIndex];
-      if (prevEl) gsap.to(prevEl, { height: 0, opacity: 0, duration: 0.35, ease: "power2.in", overwrite: true });
+      if (prevEl) gsap.to(prevEl, {
+        height: 0, opacity: 0, duration: 0.35, ease: "power2.in", overwrite: true,
+        onComplete: () => ScrollTrigger.refresh(),
+      });
       if (prevIcon) gsap.to(prevIcon, { rotate: 0, duration: 0.3, ease: "power2.out" });
     }
 
@@ -121,7 +124,13 @@ export default function Projects({ content }: { content: { ui: ProjectsUI; items
       const el = detailRefs.current[i];
       const icon = iconRefs.current[i];
       if (el) {
-        gsap.to(el, { height: "auto", opacity: 1, duration: 0.5, ease: "power3.out", overwrite: true });
+        gsap.to(el, {
+          height: "auto", opacity: 1, duration: 0.5, ease: "power3.out", overwrite: true,
+          onComplete: () => {
+            gsap.set(el, { clearProps: "overflow" }); // remove inline overflow:hidden after open
+            ScrollTrigger.refresh();
+          },
+        });
         const innerEls = el.querySelectorAll("[data-detail-item]");
         gsap.from(innerEls, {
           y: 18,
