@@ -121,18 +121,18 @@ export const ptContent: SiteContent = {
     items: [
       {
         number: "01",
-        title: "Penso",
-        body: "Começo pelo problema, não pela solução. Antes de qualquer pixel ou linha de código, paro para perceber o que o produto precisa de ser, e porquê.",
+        title: "Product Design first",
+        body: "O utilizador não é um requisito, é o ponto de partida. Cada decisão de design começa por perceber quem usa, em que contexto, e o que realmente precisa de acontecer.",
       },
       {
         number: "02",
-        title: "Estruturo",
-        body: "Desenvolvi uma metodologia própria: seis documentos que organizam tudo o que um projeto precisa antes de começar a ser construído.",
+        title: "AI como co-piloto",
+        body: "Uso Claude Code, Cursor e vibe coding como extensão do meu processo. A AI executa, eu decido.",
       },
       {
         number: "03",
-        title: "Construo",
-        body: "Não fico pelo desenho. Lanço. O meu processo foi desenhado para ir do conceito ao produto real, sozinho, em semanas, sem depender de uma equipa grande.",
+        title: "De ideia a realidade",
+        body: "Não entrego ficheiros. Entrego produtos. O meu processo foi desenhado para chegar à produção sozinho, sem overhead desnecessário.",
       },
     ],
   },
