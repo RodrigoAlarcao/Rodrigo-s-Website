@@ -107,11 +107,9 @@ export const ptContent: SiteContent = {
   about: [
     { text: "Sou designer há ", accent: false },
     { text: "7 anos", accent: true },
-    { text: ". Desenvolvi um processo de trabalho com inteligência artificial que me permite ir de ", accent: false },
-    { text: "conceito a produto em semanas", accent: true },
-    { text: ", sem perder qualidade nem identidade. O que me distingue ", accent: false },
-    { text: "não é a velocidade", accent: true },
-    { text: ", é conseguir fazer os três: pensar o produto, desenhar a experiência, e construir.", accent: false },
+    { text: ". O que me distingue não é a velocidade, é o processo. Penso o produto, desenho a experiência, e ", accent: false },
+    { text: "torno a ideia real", accent: true },
+    { text: ".", accent: false },
   ],
   whatIDo: {
     sectionLabel: "O que faço",
