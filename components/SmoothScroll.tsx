@@ -36,18 +36,15 @@ export default function SmoothScroll({
     lenis.on("scroll", ScrollTrigger.update);
 
     // gsap.ticker substitui o rAF loop do Lenis — sincronização perfeita
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
-    });
-
+    // Store the function reference so cleanup can remove the exact same listener
+    const lenisRaf = (time: number) => { lenis.raf(time * 1000); };
+    gsap.ticker.add(lenisRaf);
     gsap.ticker.lagSmoothing(0);
 
     return () => {
       lenis.destroy();
       lenisRef.current = null;
-      gsap.ticker.remove((time) => {
-        lenis.raf(time * 1000);
-      });
+      gsap.ticker.remove(lenisRaf);
     };
   }, []);
 

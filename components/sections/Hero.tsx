@@ -37,6 +37,11 @@ export default function Hero({ content }: { content: HeroContent }) {
     ).matches;
     if (prefersReduced) return;
 
+    // Skip canvas entirely on touch/mobile devices — no fine-pointer cursor means
+    // the blob reveal never fires anyway; saves significant CPU on iOS/Android.
+    const isTouchDevice = !window.matchMedia("(pointer: fine)").matches;
+    if (isTouchDevice) return;
+
     const canvas = canvasRef.current!;
     const container = containerRef.current!;
 
@@ -53,7 +58,7 @@ export default function Hero({ content }: { content: HeroContent }) {
 
     // Preload wireframe image — drawn on canvas as the "always-visible" base layer
     const bgFront = new Image();
-    bgFront.src = "/images/hero-bg-front4.jpg";
+    bgFront.src = "/images/hero-bg-front4.webp";
 
     // ── Marching squares iso-contour approach ────────────────────────────────
     // Contour lines of a continuous scalar field NEVER cross each other.
@@ -204,6 +209,16 @@ export default function Hero({ content }: { content: HeroContent }) {
       const t = time;
       const mx = curPos.current.x, my = curPos.current.y;
 
+      // Pre-compute animated mountain centers once per frame (not per grid vertex).
+      // Moves 12 Math.sin calls from inside the 22,713-iteration grid loop to just 12
+      // total calls per frame — eliminates ~136K redundant sin evaluations/frame.
+      const mPre = mountains.map(m => ({
+        acx: (m.cx + 0.04 * Math.sin(t * m.fx + m.phx)) * W,
+        acy: (m.cy + 0.03 * Math.sin(t * m.fy + m.phy)) * H,
+        r2:  (m.r * H) ** 2,
+        A:   m.A,
+      }));
+
       // Step 4: Build height field
       for (let gy = 0; gy <= GH; gy++) {
         for (let gx = 0; gx <= GW; gx++) {
@@ -211,13 +226,9 @@ export default function Hero({ content }: { content: HeroContent }) {
           const py = (gy / GH) * H;
           let val = 0;
 
-          for (const m of mountains) {
-            // Animate peak position with slow sinusoidal drift
-            const acx = (m.cx + 0.04 * Math.sin(t * m.fx + m.phx)) * W;
-            const acy = (m.cy + 0.03 * Math.sin(t * m.fy + m.phy)) * H;
-            const r2  = (m.r * H) ** 2;
-            const dx = px - acx, dy = py - acy;
-            val += m.A * Math.exp(-(dx * dx + dy * dy) / (2 * r2));
+          for (const m of mPre) {
+            const dx = px - m.acx, dy = py - m.acy;
+            val += m.A * Math.exp(-(dx * dx + dy * dy) / (2 * m.r2));
           }
 
           // Cursor depression — local minimum pulls nearby contours inward (fades with reveal)
@@ -270,10 +281,26 @@ export default function Hero({ content }: { content: HeroContent }) {
       }
     };
 
-    gsap.ticker.add(draw);
+    // Pause the canvas ticker when the hero section is off-screen to avoid
+    // running 22,400+ marching-squares computations per frame while invisible.
+    let tickerActive = false;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !tickerActive) {
+          gsap.ticker.add(draw);
+          tickerActive = true;
+        } else if (!entry.isIntersecting && tickerActive) {
+          gsap.ticker.remove(draw);
+          tickerActive = false;
+        }
+      },
+      { threshold: 0 }
+    );
+    io.observe(container);
 
     return () => {
       gsap.ticker.remove(draw);
+      io.disconnect();
       ro.disconnect();
     };
   }, []);
@@ -450,7 +477,7 @@ export default function Hero({ content }: { content: HeroContent }) {
           ref={bgImageRef}
           className="absolute inset-0 hidden md:block"
           style={{
-            backgroundImage: "url('/images/hero-bg8.jpg')",
+            backgroundImage: "url('/images/hero-bg8.webp')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
@@ -461,7 +488,7 @@ export default function Hero({ content }: { content: HeroContent }) {
         <div
           className="absolute inset-0 md:hidden"
           style={{
-            backgroundImage: "url('/images/bg-mobile2.jpg')",
+            backgroundImage: "url('/images/bg-mobile2.webp')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             filter: "brightness(0.72) saturate(0.85) sepia(0.08)",

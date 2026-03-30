@@ -6,6 +6,7 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "../globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import Cursor from "@/components/ui/Cursor";
+import HeroPreload from "@/components/HeroPreload";
 
 const cabinetGrotesk = localFont({
   src: [
@@ -66,6 +67,7 @@ export default function EnLayout({
   return (
     <html lang="en" className={`dark ${cabinetGrotesk.variable}`}>
       <body className="antialiased">
+        <HeroPreload />
         <Cursor />
         <SmoothScroll>{children}</SmoothScroll>
       </body>
