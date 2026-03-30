@@ -7,6 +7,7 @@ import "@fontsource/ibm-plex-mono/400.css";
 import "../globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import Cursor from "@/components/ui/Cursor";
+import HeroPreload from "@/components/HeroPreload";
 
 // ─── Cabinet Grotesk — Fontshare (local) ────────────────────────────
 const cabinetGrotesk = localFont({
@@ -72,6 +73,7 @@ export default function PtLayout({
     // dark class: dark mode exclusivo (PRD secção 2.1)
     <html lang="pt" className={`dark ${cabinetGrotesk.variable}`}>
       <body className="antialiased">
+        <HeroPreload />
         <Cursor />
         <SmoothScroll>{children}</SmoothScroll>
       </body>

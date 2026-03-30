@@ -181,7 +181,7 @@ export default function Projects({ content }: { content: { ui: ProjectsUI; items
                   </span>
                 </h3>
 
-                <p className="font-body font-light text-dim leading-[1.6] max-w-prose transition-colors duration-500 group-hover:text-text">
+                <p className="font-body font-light text-dim leading-[1.6] max-w-prose transition-colors duration-500 group-hover:text-text whitespace-pre-line">
                   {project.description}
                 </p>
                 <div className="flex flex-wrap gap-3 mt-1">
@@ -235,27 +235,54 @@ export default function Projects({ content }: { content: { ui: ProjectsUI; items
                     <span className="font-mono text-label text-dim">{ui.screenshotSoon}</span>
                   </div>
 
-                  {/* 3 colunas de detalhe */}
+                  {/* Detalhe — grid flexível (sections) ou legacy 3-col */}
                   <div data-detail-item className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-12">
-                    <div className="flex flex-col gap-3">
-                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">{ui.whatIDid}</h4>
-                      <p className="font-body font-light text-text leading-[1.75]">{project.detail.whatIDid}</p>
-                    </div>
-                    <div className="flex flex-col gap-3">
-                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">{ui.whyIDid}</h4>
-                      <p className="font-body font-light text-text leading-[1.75]">{project.detail.whyIDid}</p>
-                    </div>
-                    <div className="flex flex-col gap-3">
-                      <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">{ui.process}</h4>
-                      <p className="font-body font-light text-text leading-[1.75]">{project.detail.process}</p>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {project.detail.tools.map((tool) => (
-                          <span key={tool} className="font-mono text-label text-dim border border-border px-2 py-1 rounded-sm">
-                            {tool}
-                          </span>
+                    {project.detail.sections ? (
+                      // Formato flexível: n secções definidas no conteúdo + Stack como último item
+                      <>
+                        {project.detail.sections.map((section) => (
+                          <div key={section.label} className="flex flex-col gap-3">
+                            <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">{section.label}</h4>
+                            <p className="font-body font-light text-text leading-[1.75]">{section.content}</p>
+                          </div>
                         ))}
-                      </div>
-                    </div>
+                        {project.detail.tools.length > 0 && (
+                          <div className="flex flex-col gap-3">
+                            <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">{ui.stackLabel}</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {project.detail.tools.map((tool) => (
+                                <span key={tool} className="font-mono text-label text-dim border border-border px-2 py-1 rounded-sm">
+                                  {tool}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      // Formato legacy: 3 colunas fixas (O que fiz / Porque fiz / Processo)
+                      <>
+                        <div className="flex flex-col gap-3">
+                          <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">{ui.whatIDid}</h4>
+                          <p className="font-body font-light text-text leading-[1.75]">{project.detail.whatIDid}</p>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                          <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">{ui.whyIDid}</h4>
+                          <p className="font-body font-light text-text leading-[1.75]">{project.detail.whyIDid}</p>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                          <h4 className="font-mono text-label uppercase tracking-[0.12em] text-dim">{ui.process}</h4>
+                          <p className="font-body font-light text-text leading-[1.75]">{project.detail.process}</p>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {project.detail.tools.map((tool) => (
+                              <span key={tool} className="font-mono text-label text-dim border border-border px-2 py-1 rounded-sm">
+                                {tool}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* CTA dentro da gaveta */}
