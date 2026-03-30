@@ -17,7 +17,10 @@ export default function Hero({ content }: { content: HeroContent }) {
   const taglineRef = useRef<HTMLParagraphElement>(null);
   const ctaRef = useRef<HTMLAnchorElement>(null);
 
-  // ── Layer 1: background image ref (parallax) ────────────────────────────────
+  // ── Parallax wrapper: both image layers move together ───────────────────────
+  const parallaxWrapperRef = useRef<HTMLDivElement>(null);
+
+  // ── Layer 1: background image ref ───────────────────────────────────────────
   const bgImageRef = useRef<HTMLDivElement>(null);
 
   // ── Layer 2: canvas refs ─────────────────────────────────────────────────────
@@ -26,7 +29,6 @@ export default function Hero({ content }: { content: HeroContent }) {
   const curPos = useRef({ x: -9999, y: -9999 });
   const isHovering = useRef(false); // true while cursor is inside the hero
   const fadeVal = useRef(0);        // 0–1, lerped for smooth enter/leave
-  const scrollOffsetRef = useRef(0); // 0–1, hero scroll progress for canvas parallax
 
   // ── Canvas setup ─────────────────────────────────────────────────────────────
   useIsomorphicLayoutEffect(() => {
@@ -128,9 +130,7 @@ export default function Hero({ content }: { content: HeroContent }) {
       // Falls back to dark fill while image is loading on first frame
       ctx.globalCompositeOperation = "source-over";
       if (bgFront.complete && bgFront.naturalWidth > 0) {
-        // Parallax: front image moves slightly slower than the section scroll
-        const parallaxY = scrollOffsetRef.current * H * 0.25;
-        ctx.drawImage(bgFront, 0, parallaxY, W, H - parallaxY);
+        ctx.drawImage(bgFront, 0, 0, W, H);
       } else {
         ctx.fillStyle = "#0A0A09";
         ctx.fillRect(0, 0, W, H);
@@ -352,8 +352,8 @@ export default function Hero({ content }: { content: HeroContent }) {
           "-=0.5"
         );
 
-      // Background image parallax — moves at 25% of scroll speed, recedes into depth
-      gsap.to(bgImageRef.current, {
+      // Parallax wrapper — both image layers move together at 25% scroll speed
+      gsap.to(parallaxWrapperRef.current, {
         y: "25%",
         ease: "none",
         scrollTrigger: {
@@ -363,16 +363,6 @@ export default function Hero({ content }: { content: HeroContent }) {
           scrub: true,
           invalidateOnRefresh: true,
         },
-      });
-
-      // Canvas front-image parallax — feeds scrollOffsetRef used in draw()
-      ScrollTrigger.create({
-        trigger: containerRef.current,
-        start: "top top",
-        end: "bottom top",
-        scrub: true,
-        invalidateOnRefresh: true,
-        onUpdate: (self) => { scrollOffsetRef.current = self.progress; },
       });
 
       // Divider scroll-out: fromTo is explicit about both start and end states,
@@ -444,30 +434,41 @@ export default function Hero({ content }: { content: HeroContent }) {
       onMouseLeave={handleMouseLeave}
       className="relative overflow-hidden min-h-screen flex flex-col justify-between pt-32 md:pt-40 pb-16 md:pb-24"
     >
-      {/* Layer 1 — background image (CSS, position absolute) — desktop only */}
+      {/* Parallax wrapper — Layer 1 + Layer 2 move as one unit */}
       <div
-        ref={bgImageRef}
+        ref={parallaxWrapperRef}
         aria-hidden="true"
-        className="absolute inset-0 hidden md:block"
-        style={{
-          backgroundImage: "url('/images/hero-bg8.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
-        }}
-      />
+        className="absolute inset-0"
+      >
+        {/* Layer 1 — background image (CSS, position absolute) — desktop only */}
+        <div
+          ref={bgImageRef}
+          className="absolute inset-0 hidden md:block"
+          style={{
+            backgroundImage: "url('/images/hero-bg8.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
+          }}
+        />
 
-      {/* Layer 1 — background image mobile (no reveal effect on mobile) */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 md:hidden"
-        style={{
-          backgroundImage: "url('/images/bg-mobile2.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
-        }}
-      />
+        {/* Layer 1 — background image mobile (no reveal effect on mobile) */}
+        <div
+          className="absolute inset-0 md:hidden"
+          style={{
+            backgroundImage: "url('/images/bg-mobile2.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "brightness(0.72) saturate(0.85) sepia(0.08)",
+          }}
+        />
+
+        {/* Layer 2 — canvas: organic splines + cursor reveal mask */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 z-10 pointer-events-none w-full h-full hidden md:block"
+        />
+      </div>
 
       {/* Layer 1b — bottom gradient: fades hero into site bg colour (#0A0A09) */}
       <div
@@ -476,13 +477,6 @@ export default function Hero({ content }: { content: HeroContent }) {
         style={{
           background: "linear-gradient(to bottom, transparent, #000000)",
         }}
-      />
-
-      {/* Layer 2 — canvas: organic splines + cursor reveal mask */}
-      <canvas
-        ref={canvasRef}
-        aria-hidden="true"
-        className="absolute inset-0 z-10 pointer-events-none w-full h-full hidden md:block"
       />
 
       {/* Layer 3 — text content (unchanged JSX) */}
