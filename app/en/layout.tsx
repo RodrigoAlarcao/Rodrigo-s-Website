@@ -7,6 +7,8 @@ import "../globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import Cursor from "@/components/ui/Cursor";
 import HeroPreload from "@/components/HeroPreload";
+import { LoadingProvider } from "@/context/LoadingContext";
+import Preloader from "@/components/Preloader";
 
 const cabinetGrotesk = localFont({
   src: [
@@ -68,8 +70,11 @@ export default function EnLayout({
     <html lang="en" className={`dark ${cabinetGrotesk.variable}`}>
       <body className="antialiased">
         <HeroPreload />
-        <Cursor />
-        <SmoothScroll>{children}</SmoothScroll>
+        <LoadingProvider>
+          <Preloader />
+          <Cursor />
+          <SmoothScroll>{children}</SmoothScroll>
+        </LoadingProvider>
       </body>
     </html>
   );

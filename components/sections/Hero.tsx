@@ -4,11 +4,14 @@ import { useRef, type MouseEvent } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useIsomorphicLayoutEffect } from "@/hooks/useIsomorphicLayoutEffect";
+import { useLoading } from "@/context/LoadingContext";
 import type { HeroContent } from "@/lib/content";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Hero({ content }: { content: HeroContent }) {
+  const { isLoaded } = useLoading();
+
   // ── Layer 3: text refs (unchanged) ──────────────────────────────────────────
   const containerRef = useRef<HTMLElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
@@ -317,8 +320,19 @@ export default function Hero({ content }: { content: HeroContent }) {
     // tgtPos intentionally NOT reset — curPos stays at last position while fading out
   };
 
-  // ── GSAP entrance timeline (unchanged) ───────────────────────────────────────
+  // ── Set initial hidden state before first paint ───────────────────────────────
   useIsomorphicLayoutEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    gsap.set(
+      [labelRef.current, nameRef.current, dividerRef.current, taglineRef.current, ctaRef.current],
+      { opacity: 0 }
+    );
+  }, []);
+
+  // ── GSAP entrance timeline + ScrollTriggers — wait for preloader ──────────────
+  useIsomorphicLayoutEffect(() => {
+    if (!isLoaded) return;
+
     const prefersReduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
@@ -336,53 +350,55 @@ export default function Hero({ content }: { content: HeroContent }) {
           ],
           { clearProps: "all" }
         );
-        return;
+      } else {
+        // Timeline de entrada — começa imediatamente após o preloader sair
+        const tl = gsap.timeline();
+
+        tl.from(labelRef.current, { y: -16, opacity: 0, duration: 0.5, ease: "power3.out" })
+
+          // Nome: clipPath reveal da esquerda para a direita
+          .from(nameRef.current, {
+            clipPath: "inset(0 100% 0 0)",
+            duration: 1.0,
+            ease: "power3.inOut",
+          }, "-=0.2")
+
+          // Separador: scale da esquerda
+          .from(
+            dividerRef.current,
+            {
+              scaleX: 0,
+              transformOrigin: "left",
+              duration: 0.6,
+              ease: "power2.inOut",
+            },
+            "-=0.2"
+          )
+
+          // Tagline: sobe com fade
+          .from(
+            taglineRef.current,
+            {
+              y: 40,
+              opacity: 0,
+              duration: 0.8,
+              ease: "power3.out",
+            },
+            "-=0.3"
+          )
+
+          // CTA: sobe suavemente
+          .from(
+            ctaRef.current,
+            {
+              y: 20,
+              opacity: 0,
+              duration: 0.6,
+              ease: "power2.out",
+            },
+            "-=0.5"
+          );
       }
-
-      // Timeline de entrada — PRD secção 5.1
-      const tl = gsap.timeline({ delay: 0.2 });
-
-      tl.from(labelRef.current, { y: -16, opacity: 0, duration: 0.5, ease: "power3.out" })
-
-      // Nome: clipPath reveal da esquerda para a direita
-        .from(nameRef.current, {
-        clipPath: "inset(0 100% 0 0)",
-        duration: 1.0,
-        ease: "power3.inOut",
-      }, "-=0.2")
-        // Separador: scale da esquerda
-        .from(
-          dividerRef.current,
-          {
-            scaleX: 0,
-            transformOrigin: "left",
-            duration: 0.6,
-            ease: "power2.inOut",
-          },
-          "-=0.2"
-        )
-        // Tagline: sobe com fade
-        .from(
-          taglineRef.current,
-          {
-            y: 40,
-            opacity: 0,
-            duration: 0.8,
-            ease: "power3.out",
-          },
-          "-=0.3"
-        )
-        // CTA: sobe suavemente
-        .from(
-          ctaRef.current,
-          {
-            y: 20,
-            opacity: 0,
-            duration: 0.6,
-            ease: "power2.out",
-          },
-          "-=0.5"
-        );
 
       // Parallax wrapper — both image layers move together at 25% scroll speed
       gsap.to(parallaxWrapperRef.current, {
@@ -454,10 +470,13 @@ export default function Hero({ content }: { content: HeroContent }) {
           },
         }
       );
+
+      // Ensure ScrollTrigger recalculates with final layout
+      ScrollTrigger.refresh();
     }, containerRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [isLoaded]);
 
   return (
     <section
